@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
+import MyPageLayout from "../../components/user/MyPageLayout";
 import { deleteMyInquiryThread, findMyInquiryThread } from "../../utils/myInquiryCenter";
 
 const STATUS_LABELS = {
@@ -27,12 +28,7 @@ export default function MyInquiryDetailPage() {
 
   if (!thread) {
     return (
-      <div className="container page-stack">
-        <section className="my-page-head">
-          <p className="eyebrow">문의 상세</p>
-          <h1>문의 정보를 찾을 수 없습니다.</h1>
-        </section>
-      </div>
+      <MyPageLayout eyebrow="문의 상세" title="문의 정보를 찾을 수 없습니다." />
     );
   }
 
@@ -42,13 +38,11 @@ export default function MyInquiryDetailPage() {
   };
 
   return (
-    <div className="container page-stack">
-      <section className="my-page-head">
-        <p className="eyebrow">{TYPE_LABELS[thread.type] ?? thread.type}</p>
-        <h1>{thread.title}</h1>
-        <p>{thread.lodging} · {thread.bookingNo} · {thread.updatedAt}</p>
-      </section>
-
+    <MyPageLayout
+      eyebrow={TYPE_LABELS[thread.type] ?? thread.type}
+      title={thread.title}
+      description={`${thread.lodging} · ${thread.bookingNo} · ${thread.updatedAt}`}
+    >
       <section className="my-page-panel">
         <div className="summary-grid">
           <div className="summary-card tone-mint">
@@ -94,6 +88,6 @@ export default function MyInquiryDetailPage() {
           </button>
         </div>
       </section>
-    </div>
+    </MyPageLayout>
   );
 }

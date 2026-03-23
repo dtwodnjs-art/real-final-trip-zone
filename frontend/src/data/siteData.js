@@ -60,16 +60,22 @@ export const promoBanners = [
 
 export const eventBanners = [
   {
-    title: "신규 판매자 온보딩",
-    subtitle: "승인 구조와 숙소 등록 흐름을 발표자료와 연결해 확인",
-    action: "판매자 흐름 보기",
-    href: "/seller",
+    title: "제주 봄 시즌 특가",
+    subtitle: "애월과 중문 중심으로 2박 이상 예약 시 조식 업그레이드와 연박 혜택을 바로 적용합니다.",
+    action: "제주 숙소 보기",
+    href: "/lodgings?region=제주&theme=deal",
   },
   {
-    title: "설계 기준 허브",
-    subtitle: "제출 HTML, 발표 deck, 구조 기준 문서를 한 번에 이동",
-    action: "문서 허브 열기",
-    href: "/docs",
+    title: "서울 시티 스테이 특가",
+    subtitle: "금토 체크인 가능한 도심 숙소를 먼저 보여주고, 체크인 당일 무료 취소 가능한 객실 위주로 구성합니다.",
+    action: "서울 숙소 보기",
+    href: "/lodgings?region=서울&theme=deal",
+  },
+  {
+    title: "부산 오션뷰 위크",
+    subtitle: "해운대와 광안리 중심으로 오션뷰 객실과 주말 쿠폰 적용 숙소를 한 번에 모아둡니다.",
+    action: "부산 숙소 보기",
+    href: "/lodgings?region=부산&theme=ocean",
   },
 ];
 
@@ -394,6 +400,13 @@ export const myBookingRows = [
     price: "378,000원",
   },
   {
+    lodgingId: 2,
+    name: "제주 포레스트 하우스",
+    stay: "02.08 - 02.10",
+    status: "COMPLETED",
+    price: "358,000원",
+  },
+  {
     lodgingId: 1,
     name: "해운대 오션 스테이",
     stay: "03.25 - 03.27",
@@ -676,6 +689,18 @@ export const adminEventRows = [
   { title: "제주 봄 시즌 특가", status: "노출중", target: "국내숙소", period: "03.22 - 04.14" },
   { title: "주말 즉시 할인 쿠폰", status: "발급중", target: "전 회원", period: "상시" },
   { title: "서울 시티 스테이 기획전", status: "검수중", target: "서울 숙소", period: "04.01 - 04.30" },
+];
+
+export const adminInquiryRows = [
+  { title: "해운대 오션 스테이 체크인 시간 문의", type: "BOOKING", status: "OPEN", owner: "김민수", target: "해운대 오션 스테이" },
+  { title: "제주 포레스트 하우스 결제 영수증 요청", type: "PAYMENT", status: "ANSWERED", owner: "박서윤", target: "제주 포레스트 하우스" },
+  { title: "서울 시티 모먼트 시설 점검 문의", type: "SYSTEM", status: "CLOSED", owner: "정하늘", target: "서울 시티 모먼트" },
+];
+
+export const adminReviewRows = [
+  { lodging: "해운대 오션 스테이", author: "김민수", score: "4.8", status: "노출", report: "0건", summary: "전망과 접근성 만족도가 높다는 후기" },
+  { lodging: "제주 포레스트 하우스", author: "이서연", score: "4.5", status: "숨김", report: "2건", summary: "객실 청결 이슈로 검토 중인 후기" },
+  { lodging: "강릉 코스트 라운지", author: "박준호", score: "5.0", status: "노출", report: "0건", summary: "조식과 오션뷰 만족도가 높은 후기" },
 ];
 
 export const auditLogRows = [

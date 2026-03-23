@@ -17,6 +17,7 @@ export default function LoginPage() {
       email: form.email,
       provider: form.provider,
       role: "ROLE_USER",
+      reviewEligibleLodgingIds: [1, 2, 3],
     });
     navigate("/");
   };
@@ -114,6 +115,7 @@ export default function LoginPage() {
                       email: `${provider.key.toLowerCase()}@tripzone.social`,
                       provider: provider.key,
                       role: "ROLE_USER",
+                      reviewEligibleLodgingIds: [1, 2, 3],
                     });
                     navigate("/");
                   }}

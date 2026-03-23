@@ -7,6 +7,7 @@ import LoginPage from "../pages/common/LoginPage";
 import SignupPage from "../pages/common/SignupPage";
 import FindIdPage from "../pages/common/FindIdPage";
 import FindPasswordPage from "../pages/common/FindPasswordPage";
+import EventsPage from "../pages/common/EventsPage";
 import LodgingListPage from "../pages/user/LodgingListPage";
 import LodgingDetailPage from "../pages/user/LodgingDetailPage";
 import BookingPage from "../pages/user/BookingPage";
@@ -32,6 +33,8 @@ import AdminDashboardPage from "../pages/admin/AdminDashboardPage";
 import AdminUsersPage from "../pages/admin/AdminUsersPage";
 import AdminSellersPage from "../pages/admin/AdminSellersPage";
 import AdminEventsPage from "../pages/admin/AdminEventsPage";
+import AdminInquiriesPage from "../pages/admin/AdminInquiriesPage";
+import AdminReviewsPage from "../pages/admin/AdminReviewsPage";
 import AdminAuditLogsPage from "../pages/admin/AdminAuditLogsPage";
 
 export default function AppRouter() {
@@ -46,6 +49,7 @@ export default function AppRouter() {
           <Route path="/signup" element={<SignupPage />} />
           <Route path="/find-id" element={<FindIdPage />} />
           <Route path="/find-password" element={<FindPasswordPage />} />
+          <Route path="/events" element={<EventsPage />} />
           <Route path="/lodgings" element={<LodgingListPage />} />
           <Route path="/lodgings/:lodgingId" element={<LodgingDetailPage />} />
           <Route path="/booking/:lodgingId" element={<BookingPage />} />
@@ -71,6 +75,8 @@ export default function AppRouter() {
           <Route path="/admin/users" element={<AdminUsersPage />} />
           <Route path="/admin/sellers" element={<AdminSellersPage />} />
           <Route path="/admin/events" element={<AdminEventsPage />} />
+          <Route path="/admin/inquiries" element={<AdminInquiriesPage />} />
+          <Route path="/admin/reviews" element={<AdminReviewsPage />} />
           <Route path="/admin/audit-logs" element={<AdminAuditLogsPage />} />
         </Route>
       </Routes>

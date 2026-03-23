@@ -1,4 +1,5 @@
 import { Link, useNavigate } from "react-router-dom";
+import MyPageLayout from "../../components/user/MyPageLayout";
 import { myProfileDetails, myProfileSummary } from "../../data/siteData";
 import { clearAuthSession } from "../../utils/authSession";
 
@@ -13,14 +14,7 @@ export default function MyProfilePage() {
   };
 
   return (
-    <div className="container page-stack">
-      <section className="my-page-head">
-        <p className="eyebrow">내 정보 관리</p>
-        <h1>{myProfileSummary.name}</h1>
-        <p>{myProfileSummary.gradeHint}</p>
-      </section>
-
-      <section className="my-page-panel">
+    <MyPageLayout eyebrow="내 정보 관리" title="내 정보 관리" description={myProfileSummary.gradeHint}>
         <div className="summary-grid">
           <div className="summary-card tone-mint">
             <span>회원 등급</span>
@@ -39,25 +33,22 @@ export default function MyProfilePage() {
           </div>
         </div>
 
-        <section className="my-page-panel">
-          <div className="my-detail-sheet">
-            {myProfileDetails.map((item) => (
-              <div key={item.label} className="my-detail-row">
-                <span>{item.label}</span>
-                <strong>{item.value}</strong>
-              </div>
-            ))}
-          </div>
-          <div className="booking-actions">
-            <Link className="secondary-button" to="/my">
-              마이페이지로
-            </Link>
-            <button type="button" className="danger-button" onClick={handleWithdraw}>
-              회원 탈퇴
-            </button>
-          </div>
-        </section>
-      </section>
-    </div>
+        <div className="my-detail-sheet">
+          {myProfileDetails.map((item) => (
+            <div key={item.label} className="my-detail-row">
+              <span>{item.label}</span>
+              <strong>{item.value}</strong>
+            </div>
+          ))}
+        </div>
+        <div className="booking-actions">
+          <Link className="secondary-button" to="/my">
+            마이페이지로
+          </Link>
+          <button type="button" className="danger-button" onClick={handleWithdraw}>
+            회원 탈퇴
+          </button>
+        </div>
+    </MyPageLayout>
   );
 }

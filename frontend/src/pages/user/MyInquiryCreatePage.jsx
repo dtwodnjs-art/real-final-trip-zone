@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import MyPageLayout from "../../components/user/MyPageLayout";
 import { createMyInquiryThread } from "../../utils/myInquiryCenter";
 
 const DEFAULT_FORM = {
@@ -25,13 +26,7 @@ export default function MyInquiryCreatePage() {
   };
 
   return (
-    <div className="container page-stack">
-      <section className="my-page-head">
-        <p className="eyebrow">문의 등록</p>
-        <h1>문의 내용을 입력합니다.</h1>
-        <p>완료를 누르면 새 문의가 포함된 상세 화면으로 이동합니다.</p>
-      </section>
-
+    <MyPageLayout eyebrow="문의 등록" title="새 문의 등록" description="완료를 누르면 문의 리스트로 돌아갑니다.">
       <form className="my-form-sheet" onSubmit={handleSubmit}>
         <label className="field-block">
           <span>문의 제목</span>
@@ -63,6 +58,6 @@ export default function MyInquiryCreatePage() {
           <Link className="secondary-button" to="/my/inquiries">취소</Link>
         </div>
       </form>
-    </div>
+    </MyPageLayout>
   );
 }

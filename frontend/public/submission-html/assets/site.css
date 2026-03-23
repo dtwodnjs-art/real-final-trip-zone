@@ -51,8 +51,7 @@ a {
 }
 
 .floating-header {
-  position: sticky;
-  top: 0;
+  position: relative;
   z-index: 20;
   backdrop-filter: blur(18px);
   background: rgba(244, 248, 252, 0.78);
@@ -107,8 +106,12 @@ a {
   box-shadow: var(--shadow);
 }
 
+.shell:is(main) {
+  padding-top: calc(var(--header-height) + 20px);
+}
+
 .hero {
-  padding: 72px 0 36px;
+  padding: 28px 0 36px;
 }
 
 .hero-card {

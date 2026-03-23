@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
+import MyPageLayout from "../../components/user/MyPageLayout";
 import { findMyInquiryThread, updateMyInquiryThread } from "../../utils/myInquiryCenter";
 
 export default function MyInquiryEditPage() {
@@ -21,12 +22,7 @@ export default function MyInquiryEditPage() {
 
   if (!form) {
     return (
-      <div className="container page-stack">
-        <section className="my-page-head">
-          <p className="eyebrow">문의 수정</p>
-          <h1>문의 정보를 찾을 수 없습니다.</h1>
-        </section>
-      </div>
+      <MyPageLayout eyebrow="문의 수정" title="문의 정보를 찾을 수 없습니다." />
     );
   }
 
@@ -41,12 +37,7 @@ export default function MyInquiryEditPage() {
   };
 
   return (
-    <div className="container page-stack">
-      <section className="my-page-head">
-        <p className="eyebrow">문의 수정</p>
-        <h1>기존 문의 내용을 수정합니다.</h1>
-      </section>
-
+    <MyPageLayout eyebrow="문의 수정" title="문의 수정" description="수정 완료 후 문의 상세 화면으로 이동합니다.">
       <form className="my-form-sheet" onSubmit={handleSubmit}>
         <label className="field-block">
           <span>문의 제목</span>
@@ -78,6 +69,6 @@ export default function MyInquiryEditPage() {
           <Link className="secondary-button" to={`/my/inquiries/${inquiryId}`}>취소</Link>
         </div>
       </form>
-    </div>
+    </MyPageLayout>
   );
 }

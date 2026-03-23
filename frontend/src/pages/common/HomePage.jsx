@@ -573,7 +573,7 @@ export default function HomePage() {
               <Link className="primary-button" to="/lodgings">
                 숙소 검색하기
               </Link>
-              <Link className="secondary-button hero-secondary" to="/lodgings?theme=deal">
+              <Link className="secondary-button hero-secondary" to="/events">
                 오늘 특가 보기
               </Link>
             </div>
@@ -687,8 +687,8 @@ export default function HomePage() {
         <section className="home-section">
           <div className="home-section-head">
             <h2>지금 예약이 빠른 특가</h2>
-            <Link className="text-link" to="/lodgings">
-              전체 숙소 보기
+            <Link className="text-link" to="/events">
+              이벤트 전체 보기
             </Link>
           </div>
           <div className="promo-grid">

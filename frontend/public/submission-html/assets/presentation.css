@@ -11,10 +11,10 @@ body.presentation-body {
 }
 
 .presentation-header {
-  position: fixed;
-  top: 20px;
-  left: 24px;
-  right: 24px;
+  position: relative;
+  top: 0;
+  left: 0;
+  right: 0;
   z-index: 40;
   display: flex;
   align-items: center;
@@ -109,7 +109,7 @@ body.presentation-body {
 
 .slide {
   min-height: 100vh;
-  padding: 112px 72px 80px;
+  padding: 72px 72px 80px;
   display: flex;
   align-items: center;
 }

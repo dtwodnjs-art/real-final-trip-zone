@@ -1,15 +1,10 @@
 import { Link } from "react-router-dom";
+import MyPageLayout from "../../components/user/MyPageLayout";
 import { myBookingRows, myBookingSummaries } from "../../data/siteData";
 
 export default function MyBookingsPage() {
   return (
-    <div className="container page-stack">
-      <section className="my-page-head">
-        <p className="eyebrow">예약</p>
-        <h1>내 예약</h1>
-        <p>다가오는 예약과 지난 숙소 기록을 한 번에 확인합니다.</p>
-      </section>
-      <section className="my-page-panel">
+    <MyPageLayout eyebrow="예약" title="내 예약" description="다가오는 예약과 지난 숙소 기록을 한 번에 확인합니다.">
         <div className="summary-grid">
           {myBookingSummaries.map((item) => (
             <div key={item.label} className={`summary-card tone-${item.tone}`}>
@@ -50,7 +45,6 @@ export default function MyBookingsPage() {
             문의 내역 보기
           </Link>
         </div>
-      </section>
-    </div>
+    </MyPageLayout>
   );
 }

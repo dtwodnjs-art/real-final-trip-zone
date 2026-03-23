@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import MyPageLayout from "../../components/user/MyPageLayout";
 import { readMyInquiryThreads } from "../../utils/myInquiryCenter";
 
 const STATUS_LABELS = {
@@ -24,14 +25,7 @@ export default function MyInquiriesPage() {
   }, []);
 
   return (
-    <div className="container page-stack">
-      <section className="my-page-head">
-        <p className="eyebrow">문의센터</p>
-        <h1>내가 작성한 문의를 최신순으로 확인합니다.</h1>
-        <p>제목을 누르면 상세로 이동하고, 등록 버튼으로 새 문의를 작성할 수 있습니다.</p>
-      </section>
-
-      <section className="my-page-panel">
+    <MyPageLayout eyebrow="문의센터" title="문의센터" description="제목을 누르면 상세로 이동하고, 등록 버튼으로 새 문의를 작성할 수 있습니다.">
         <div className="ops-toolbar">
           <Link className="primary-button" to="/my/inquiries/new">
             문의 등록
@@ -56,7 +50,6 @@ export default function MyInquiriesPage() {
             </article>
           ))}
         </div>
-      </section>
-    </div>
+    </MyPageLayout>
   );
 }

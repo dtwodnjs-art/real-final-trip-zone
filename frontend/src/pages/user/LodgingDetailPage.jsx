@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useLocation, useParams } from "react-router-dom";
 import StayMap from "../../components/common/StayMap";
 import { lodgingReviews, lodgings, myBookingRows } from "../../data/siteData";
+import { readAuthSession } from "../../utils/authSession";
 
 function buildGalleryImages(image) {
   return [image, `${image}&sat=-10`, `${image}&exp=5`];
@@ -117,10 +118,14 @@ export default function LodgingDetailPage() {
   const [reviewDraft, setReviewDraft] = useState({ score: 5, body: "", images: [] });
   const [reviews, setReviews] = useState(lodgingReviews);
   const reviewSectionRef = useRef(null);
+  const authSession = readAuthSession();
   const roomBaseMeta = getRoomMeta(selectedRoom.name);
-  const canWriteReview = useMemo(
+  const hasCompletedBooking = useMemo(
     () => myBookingRows.some((booking) => booking.lodgingId === lodging.id && booking.status === "COMPLETED"),
     [lodging.id]
+  );
+  const canWriteReview = Boolean(authSession) && (
+    authSession?.reviewEligibleLodgingIds?.includes(lodging.id) || hasCompletedBooking
   );
 
   useEffect(() => {
@@ -451,10 +456,14 @@ export default function LodgingDetailPage() {
               </form>
             ) : (
               <div className="detail-review-gate">
-                <strong>숙박 완료 예약 후 후기 작성 가능</strong>
-                <p>설계 기준에 따라 숙박 완료된 예약에 대해서만 리뷰를 등록할 수 있습니다.</p>
-                <Link className="secondary-button" to="/my/bookings">
-                  내 예약에서 완료 내역 보기
+                <strong>{authSession ? "숙박 완료 예약 후 후기 작성 가능" : "로그인 후 후기 작성 가능"}</strong>
+                <p>
+                  {authSession
+                    ? "설계 기준에 따라 숙박 완료된 예약에 대해서만 리뷰를 등록할 수 있습니다."
+                    : "후기 작성은 로그인 후 이용할 수 있습니다."}
+                </p>
+                <Link className="secondary-button" to={authSession ? "/my/bookings" : "/login"}>
+                  {authSession ? "내 예약에서 완료 내역 보기" : "로그인하기"}
                 </Link>
               </div>
             )}

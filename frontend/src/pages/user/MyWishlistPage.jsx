@@ -1,15 +1,10 @@
 import { Link } from "react-router-dom";
+import MyPageLayout from "../../components/user/MyPageLayout";
 import { wishlistRows, wishlistSummaries } from "../../data/siteData";
 
 export default function MyWishlistPage() {
   return (
-    <div className="container page-stack">
-      <section className="my-page-head">
-        <p className="eyebrow">찜</p>
-        <h1>찜한 숙소</h1>
-        <p>나중에 다시 보고 싶은 숙소와 지금 특가가 붙은 숙소를 함께 확인합니다.</p>
-      </section>
-      <section className="my-page-panel">
+    <MyPageLayout eyebrow="찜" title="찜한 숙소" description="나중에 다시 보고 싶은 숙소와 지금 특가가 붙은 숙소를 함께 확인합니다.">
         <div className="summary-grid">
           {wishlistSummaries.map((item) => (
             <div key={item.label} className={`summary-card tone-${item.tone}`}>
@@ -46,7 +41,6 @@ export default function MyWishlistPage() {
             쿠폰 리스트 보기
           </Link>
         </div>
-      </section>
-    </div>
+    </MyPageLayout>
   );
 }

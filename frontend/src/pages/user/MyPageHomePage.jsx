@@ -1,16 +1,14 @@
 import { Link } from "react-router-dom";
+import MyPageLayout from "../../components/user/MyPageLayout";
 import { myPageSections, myProfileSummary } from "../../data/siteData";
 
 export default function MyPageHomePage() {
   return (
-    <div className="container page-stack">
-      <section className="my-page-head">
-        <p className="eyebrow">마이페이지</p>
-        <h1>내 정보와 예약 흐름을 한 번에 확인합니다.</h1>
-        <p>{myProfileSummary.name} · {myProfileSummary.grade} 등급 · {myProfileSummary.status}</p>
-      </section>
-
-      <section className="my-page-panel">
+    <MyPageLayout
+      eyebrow="마이페이지"
+      title="마이페이지"
+      description={`${myProfileSummary.name} · ${myProfileSummary.grade} 등급 · ${myProfileSummary.status}`}
+    >
         <div className="summary-grid">
           <div className="summary-card tone-mint">
             <span>회원 등급</span>
@@ -38,7 +36,6 @@ export default function MyPageHomePage() {
             </Link>
           ))}
         </div>
-      </section>
-    </div>
+    </MyPageLayout>
   );
 }

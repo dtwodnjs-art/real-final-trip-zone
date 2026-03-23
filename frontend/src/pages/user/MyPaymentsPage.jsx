@@ -1,16 +1,10 @@
 import { Link } from "react-router-dom";
+import MyPageLayout from "../../components/user/MyPageLayout";
 import { paymentHistoryRows } from "../../data/siteData";
 
 export default function MyPaymentsPage() {
   return (
-    <div className="container page-stack">
-      <section className="my-page-head">
-        <p className="eyebrow">결제 내역</p>
-        <h1>결제와 환불 내역을 최신순으로 확인합니다.</h1>
-        <p>숙소 결제 내역과 환불 상태를 함께 보여줍니다.</p>
-      </section>
-
-      <section className="my-page-panel">
+    <MyPageLayout eyebrow="결제 내역" title="결제 내역" description="숙소 결제 내역과 환불 상태를 함께 보여줍니다.">
         <div className="booking-list">
           {paymentHistoryRows.map((item) => (
             <article key={item.bookingNo} className="booking-list-item">
@@ -36,7 +30,6 @@ export default function MyPaymentsPage() {
             쿠폰 리스트 보기
           </Link>
         </div>
-      </section>
-    </div>
+    </MyPageLayout>
   );
 }

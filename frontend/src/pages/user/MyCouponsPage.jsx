@@ -1,16 +1,10 @@
 import { Link } from "react-router-dom";
+import MyPageLayout from "../../components/user/MyPageLayout";
 import { couponRows } from "../../data/siteData";
 
 export default function MyCouponsPage() {
   return (
-    <div className="container page-stack">
-      <section className="my-page-head">
-        <p className="eyebrow">쿠폰 리스트</p>
-        <h1>보유 쿠폰을 최신순으로 확인합니다.</h1>
-        <p>사용 가능 상태와 만료 일정을 함께 확인합니다.</p>
-      </section>
-
-      <section className="my-page-panel">
+    <MyPageLayout eyebrow="쿠폰 리스트" title="보유 쿠폰" description="사용 가능 상태와 만료 일정을 최신순으로 확인합니다.">
         <div className="reward-list">
           {couponRows.map((item) => (
             <article key={item.id} className="reward-row">
@@ -30,7 +24,6 @@ export default function MyCouponsPage() {
             숙소 둘러보기
           </Link>
         </div>
-      </section>
-    </div>
+    </MyPageLayout>
   );
 }

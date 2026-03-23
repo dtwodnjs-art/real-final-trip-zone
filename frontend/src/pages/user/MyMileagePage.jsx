@@ -1,16 +1,10 @@
 import { Link } from "react-router-dom";
+import MyPageLayout from "../../components/user/MyPageLayout";
 import { mileageHistoryRows, rewardSummaries } from "../../data/siteData";
 
 export default function MyMileagePage() {
   return (
-    <div className="container page-stack">
-      <section className="my-page-head">
-        <p className="eyebrow">마일리지 내역</p>
-        <h1>현재 마일리지와 사용 내역을 확인합니다.</h1>
-        <p>적립과 사용 내역을 최신순으로 보여줍니다.</p>
-      </section>
-
-      <section className="my-page-panel">
+    <MyPageLayout eyebrow="마일리지 내역" title="마일리지 내역" description="적립과 사용 내역을 최신순으로 보여줍니다.">
         <div className="summary-grid">
           {rewardSummaries.map((item) => (
             <div key={item.label} className={`summary-card tone-${item.tone}`}>
@@ -40,7 +34,6 @@ export default function MyMileagePage() {
             결제 내역 보기
           </Link>
         </div>
-      </section>
-    </div>
+    </MyPageLayout>
   );
 }

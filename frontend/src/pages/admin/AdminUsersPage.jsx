@@ -63,6 +63,8 @@ export default function AdminUsersPage() {
         <div className="booking-actions">
           <Link className="secondary-button" to="/admin/sellers">판매자 관리</Link>
           <Link className="secondary-button" to="/admin/events">이벤트 · 쿠폰</Link>
+          <Link className="secondary-button" to="/admin/inquiries">문의 모니터링</Link>
+          <Link className="secondary-button" to="/admin/reviews">리뷰 운영</Link>
           <Link className="secondary-button" to="/admin/audit-logs">운영 로그</Link>
         </div>
       </section>
