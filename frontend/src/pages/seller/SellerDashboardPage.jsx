@@ -6,9 +6,9 @@ export default function SellerDashboardPage() {
     <div className="container page-stack">
       <section className="ops-hero">
         <div>
-          <p className="eyebrow">Seller operations</p>
-          <h1>오늘 처리해야 하는 예약, 문의, 숙소 상태를 한 화면에 모은 보드</h1>
-          <p>판매자 화면은 브랜드 감성보다 상태 확인과 빠른 액션이 우선이다.</p>
+          <p className="eyebrow">판매자센터</p>
+          <h1>오늘 처리할 예약, 문의, 숙소 상태</h1>
+          <p>체크인 예정 객실, 답변 대기 문의, 운영 중 숙소를 먼저 확인합니다.</p>
         </div>
       </section>
 
@@ -30,7 +30,10 @@ export default function SellerDashboardPage() {
           ))}
         </div>
         <div className="hero-actions">
+          <Link className="secondary-button" to="/seller/apply">판매자 신청</Link>
           <Link className="primary-button" to="/seller/lodgings">숙소 관리</Link>
+          <Link className="secondary-button" to="/seller/rooms">객실 관리</Link>
+          <Link className="secondary-button" to="/seller/assets">이미지 관리</Link>
           <Link className="secondary-button" to="/seller/reservations">예약 관리</Link>
           <Link className="secondary-button" to="/seller/inquiries">문의 관리</Link>
         </div>

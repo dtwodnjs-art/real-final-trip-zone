@@ -6,9 +6,9 @@ export default function AdminDashboardPage() {
     <div className="container page-stack">
       <section className="ops-hero">
         <div>
-          <p className="eyebrow">Admin operations</p>
-          <h1>판매자 승인, 회원 상태, 문의 모니터링을 정책 기준으로 보는 운영 보드</h1>
-          <p>관리자 화면은 예쁜 랜딩이 아니라 상태 분류와 빠른 판단이 핵심이다.</p>
+          <p className="eyebrow">관리자센터</p>
+          <h1>판매자 승인, 회원 상태, 문의 운영 현황</h1>
+          <p>승인 대기 판매자와 미처리 운영 이슈를 우선 확인하고 바로 처리합니다.</p>
         </div>
       </section>
 
@@ -32,6 +32,8 @@ export default function AdminDashboardPage() {
         <div className="hero-actions">
           <Link className="primary-button" to="/admin/users">회원 관리</Link>
           <Link className="secondary-button" to="/admin/sellers">판매자 관리</Link>
+          <Link className="secondary-button" to="/admin/events">이벤트 · 쿠폰</Link>
+          <Link className="secondary-button" to="/admin/audit-logs">운영 로그</Link>
         </div>
       </section>
     </div>

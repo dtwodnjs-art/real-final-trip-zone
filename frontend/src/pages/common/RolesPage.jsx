@@ -6,7 +6,7 @@ export default function RolesPage() {
       <section className="docs-section">
         <div className="docs-section-head">
           <h2>3-Role 구조</h2>
-          <p>TripZone의 모든 화면과 기능은 세 역할을 기준으로 나뉜다. 역할이 섞이면 문서도 코드도 동시에 꼬인다.</p>
+          <p>사용자, 판매자, 관리자는 화면 목적과 필요한 정보가 다르기 때문에 별도 흐름으로 관리합니다.</p>
         </div>
         <div className="role-rail">
           {roleData.map((role) => (
@@ -22,16 +22,16 @@ export default function RolesPage() {
       <section className="docs-section">
         <div className="docs-section-head">
           <h2>왜 역할 분리가 중요한가</h2>
-          <p>같은 예약 서비스라도 사용자 화면과 운영 화면은 목적이 다르기 때문에 동일한 UI 문법으로 풀면 안 된다.</p>
+          <p>예약 서비스라도 탐색 화면과 운영 화면은 보는 정보와 행동이 완전히 다릅니다.</p>
         </div>
         <div className="docs-principle-list">
           <div className="docs-principle-item">
-            <strong>User Surface</strong>
-            <p>브랜드와 경험이 먼저 보이고, 탐색과 예약 흐름이 자연스럽게 이어져야 한다.</p>
+            <strong>사용자 화면</strong>
+            <p>숙소 탐색, 비교, 예약 흐름이 자연스럽게 이어져야 합니다.</p>
           </div>
           <div className="docs-principle-item">
-            <strong>Seller / Admin Surface</strong>
-            <p>유틸리티 카피, 상태값, 목록, 액션이 우선이다. 마케팅형 화면과 같은 문법을 쓰지 않는다.</p>
+            <strong>판매자 · 관리자 화면</strong>
+            <p>상태값, 목록, 승인, 문의 처리가 먼저 읽히도록 운영 화면 문법을 따릅니다.</p>
           </div>
         </div>
       </section>

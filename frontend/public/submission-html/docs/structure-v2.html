@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>TripZone 구조 기준 v2</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&family=Noto+Sans+KR:wght@400;500;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../assets/site.css" />
+    <script src="../assets/site.js" defer></script>
+  </head>
+  <body>
+    <header class="floating-header">
+      <div class="floating-header-inner">
+        <div class="brand"><span class="brand-mark"></span><span>TripZone 구조 기준 v2</span></div>
+        <nav class="nav">
+          <a href="../index.html">대시보드</a>
+          <a href="./requirements.html">요구사항</a>
+          <a href="./features.html">기능</a>
+          <a class="active" href="./structure.html">구조</a>
+          <a href="./database.html">DB</a>
+          <a href="./company.html">통합 기준</a>
+          <a href="../presentation/index.html">발표자료</a>
+        </nav>
+      </div>
+    </header>
+    <main class="shell doc-layout">
+      <aside class="doc-sidebar">
+        <div class="sidebar-card">
+          <h2>구조 기준 v2</h2>
+          <p>기존 구조명세 스프레드시트와 최신 도메인 설계를 맞춘 상세 구조 기준.</p>
+          <nav class="sidebar-nav">
+            <a class="active" href="#base">공통 패키지</a>
+            <a href="#domains">도메인별 구조</a>
+            <a href="#fixes">교정 항목</a>
+            <a href="#rules">구조 규칙</a>
+          </nav>
+        </div>
+      </aside>
+      <div class="doc-main">
+        <section class="content-block" id="base">
+          <p class="eyebrow">Base Package</p>
+          <h2>공통 패키지 기준</h2>
+          <div class="pill-row">
+            <span class="pill">com.kh.trip.domain</span>
+            <span class="pill">com.kh.trip.dto</span>
+            <span class="pill">com.kh.trip.repository</span>
+            <span class="pill">com.kh.trip.service</span>
+            <span class="pill">com.kh.trip.controller</span>
+            <span class="pill">com.kh.trip.config</span>
+          </div>
+          <p>구조명세 스프레드시트의 패키지 분류 의도는 유지하되, 오타와 충돌 명칭을 최신 기준으로 교체한다.</p>
+        </section>
+
+        <section class="content-block" id="domains">
+          <p class="eyebrow">Domains</p>
+          <h2>도메인별 구조</h2>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr><th>도메인</th><th>엔티티</th><th>DTO / Repository / Service / Controller</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>user</td><td>User, MemberGrade, HostProfile, MileageHistory, UserAuthProvider, UserRole, UserRefreshToken</td><td>UserDTO, HostProfileDTO, MileageHistoryDTO / UserRepository, HostProfileRepository / UserService, HostService, MileageService / UserController, HostController, MileageController</td></tr>
+                <tr><td>login</td><td>UserAuthProvider, UserRefreshToken</td><td>LoginRequestDTO, LoginResponseDTO / UserAuthProviderRepository / LoginService / LoginController</td></tr>
+                <tr><td>event</td><td>Event, Coupon, EventCoupon</td><td>EventDTO, CouponDTO / EventRepository, CouponRepository / EventService, CouponService / EventController, CouponController</td></tr>
+                <tr><td>reserve</td><td>Booking, Payment, Review, ReviewImage</td><td>BookingDTO, PaymentDTO, ReviewDTO / BookingRepository, PaymentRepository, ReviewRepository / BookingService, PaymentService, ReviewService / BookingController, PaymentController, ReviewController</td></tr>
+                <tr><td>lodging</td><td>Lodging, Room, Wishlist, LodgingImage</td><td>LodgingDTO, RoomDTO, WishlistDTO / LodgingRepository, RoomRepository, WishlistRepository / LodgingService, RoomService, WishlistService / LodgingController, RoomController, WishlistController</td></tr>
+                <tr><td>inquiry</td><td>InquiryRoom, InquiryMessage</td><td>InquiryRoomDTO, InquiryMessageDTO / InquiryRoomRepository, InquiryMessageRepository / InquiryService / InquiryController</td></tr>
+                <tr><td>admin</td><td>AuditLog</td><td>AdminDashboardDTO, AuditLogDTO / AuditLogRepository / AdminService / AdminController</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="content-block" id="fixes">
+          <p class="eyebrow">Fixes</p>
+          <h2>구조명세서에서 바로잡은 항목</h2>
+          <div class="timeline">
+            <div class="timeline-item"><div class="timeline-step">01</div><div><strong>오타 수정</strong><p><span class="code-chip">BookindController</span> → <span class="code-chip">BookingController</span>, <span class="code-chip">LodgindImage</span> → <span class="code-chip">LodgingImage</span></p></div></div>
+            <div class="timeline-item"><div class="timeline-step">02</div><div><strong>명칭 통일</strong><p><span class="code-chip">WishList</span> → <span class="code-chip">Wishlist</span>, <span class="code-chip">UserGradeRepository</span> → <span class="code-chip">MemberGradeRepository</span></p></div></div>
+            <div class="timeline-item"><div class="timeline-step">03</div><div><strong>문의 구조 교정</strong><p><span class="code-chip">Inquiry / Comment</span> → <span class="code-chip">InquiryRoom / InquiryMessage</span></p></div></div>
+          </div>
+        </section>
+
+        <section class="content-block" id="rules">
+          <p class="eyebrow">Rules</p>
+          <h2>구조 규칙</h2>
+          <ul>
+            <li>엔티티명은 단수형 기준</li>
+            <li>DTO는 <span class="code-chip">*DTO</span></li>
+            <li>서비스 구현체는 <span class="code-chip">*ServiceImpl</span></li>
+            <li>컨트롤러는 도메인 기준 하나씩 분리</li>
+            <li>Repository는 aggregate root 또는 주요 테이블 기준으로 구성</li>
+          </ul>
+        </section>
+      </div>
+    </main>
+  </body>
+</html>

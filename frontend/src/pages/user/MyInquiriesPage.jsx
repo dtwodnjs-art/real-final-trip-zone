@@ -1,41 +1,60 @@
-import { inquiryTimeline } from "../../data/siteData";
+import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
+import { readMyInquiryThreads } from "../../utils/myInquiryCenter";
+
+const STATUS_LABELS = {
+  OPEN: "접수",
+  ANSWERED: "답변 완료",
+  CLOSED: "종료",
+  BLOCKED: "차단",
+};
+
+const TYPE_LABELS = {
+  LODGING: "숙소 문의",
+  BOOKING: "예약 문의",
+  PAYMENT: "결제 문의",
+  SYSTEM: "시스템 문의",
+};
 
 export default function MyInquiriesPage() {
+  const [rows, setRows] = useState([]);
+
+  useEffect(() => {
+    setRows(readMyInquiryThreads());
+  }, []);
+
   return (
     <div className="container page-stack">
       <section className="my-page-head">
-        <p className="eyebrow">My support</p>
-        <h1>내 문의</h1>
+        <p className="eyebrow">문의센터</p>
+        <h1>내가 작성한 문의를 최신순으로 확인합니다.</h1>
+        <p>제목을 누르면 상세로 이동하고, 등록 버튼으로 새 문의를 작성할 수 있습니다.</p>
       </section>
+
       <section className="my-page-panel">
-        <div className="inquiry-overview">
-          <div className="inquiry-overview-item">
-            <strong>InquiryRoom</strong>
-            <p>제목, 문의 유형, 관련 숙소/예약, 문의 상태를 가진다.</p>
-          </div>
-          <div className="inquiry-overview-item">
-            <strong>InquiryMessage</strong>
-            <p>회원, 판매자, 관리자 메시지를 시간순으로 누적한다.</p>
-          </div>
+        <div className="ops-toolbar">
+          <Link className="primary-button" to="/my/inquiries/new">
+            문의 등록
+          </Link>
         </div>
-        <div className="timeline-list">
-          {inquiryTimeline.map((item) => (
-            <article key={`${item.role}-${item.time}`} className="timeline-item">
-              <div className="timeline-meta">
-                <strong>{item.role}</strong>
-                <span>{item.time}</span>
+
+        <div className="booking-list">
+          {rows.map((item) => (
+            <article key={item.id} className="booking-list-item">
+              <div className="booking-list-copy">
+                <Link className="text-link" to={`/my/inquiries/${item.id}`}>
+                  {item.title}
+                </Link>
+                <p>{TYPE_LABELS[item.type] ?? item.type} · {item.lodging} · {item.updatedAt}</p>
               </div>
-              <p>{item.body}</p>
+              <div className="booking-list-meta">
+                <span className={`table-code code-${item.status.toLowerCase()}`}>
+                  {STATUS_LABELS[item.status] ?? item.status}
+                </span>
+                <span>{item.bookingNo}</span>
+              </div>
             </article>
           ))}
-        </div>
-        <div className="booking-actions">
-          <a className="secondary-button" href="/lodgings">
-            다른 숙소 둘러보기
-          </a>
-          <a className="secondary-button" href="/my/bookings">
-            예약 내역 보기
-          </a>
         </div>
       </section>
     </div>

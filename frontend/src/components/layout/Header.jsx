@@ -1,38 +1,55 @@
-import { Link, NavLink } from "react-router-dom";
-
-const navItems = [
-  { to: "/", label: "국내숙소" },
-  { to: "/lodgings", label: "특가 숙소" },
-  { to: "/my/bookings", label: "예약내역" },
-  { to: "/my/inquiries", label: "문의내역" },
-];
+import { useEffect, useState } from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { clearAuthSession, readAuthSession } from "../../utils/authSession";
 
 export default function Header() {
+  const location = useLocation();
+  const navigate = useNavigate();
+  const [session, setSession] = useState(() => readAuthSession());
+
+  useEffect(() => {
+    setSession(readAuthSession());
+  }, [location.pathname, location.search]);
+
+  const handleLogout = () => {
+    clearAuthSession();
+    setSession(null);
+    navigate("/");
+  };
+
   return (
     <header className="header">
-      <div className="container header-inner">
+      <div className="header-frame header-inner">
         <Link className="brand" to="/">
-          <span className="brand-main">TripZone</span>
-          <span className="brand-sub">국내 숙소 예약</span>
+          <span className="brand-mark" aria-hidden="true">
+            <span className="brand-mark-wave" />
+            <span className="brand-mark-sun" />
+          </span>
+          <span className="brand-copy">
+            <span className="brand-main">TripZone</span>
+            <span className="brand-sub">stay and travel</span>
+          </span>
         </Link>
-        <nav className="header-nav">
-          {navItems.map((item) => (
-            <NavLink
-              key={item.to}
-              to={item.to}
-              className={({ isActive }) => `nav-chip${isActive ? " active" : ""}`}
-            >
-              {item.label}
-            </NavLink>
-          ))}
-        </nav>
         <div className="header-utility">
-          <Link className="utility-link" to="/seller">
-            판매자센터
-          </Link>
-          <Link className="utility-link" to="/docs">
-            문서
-          </Link>
+          {session ? (
+            <>
+              <Link className="utility-link" to="/my">
+                마이페이지
+              </Link>
+              <button type="button" className="utility-link" onClick={handleLogout}>
+                로그아웃
+              </button>
+            </>
+          ) : (
+            <>
+              <Link className="utility-link" to="/login">
+                로그인
+              </Link>
+              <Link className="header-signup" to="/signup">
+                회원가입
+              </Link>
+            </>
+          )}
         </div>
       </div>
     </header>

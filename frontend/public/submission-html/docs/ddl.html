@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>TripZone DDL 기준</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&family=Noto+Sans+KR:wght@400;500;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../assets/site.css" />
+    <script src="../assets/site.js" defer></script>
+  </head>
+  <body>
+    <header class="floating-header">
+      <div class="floating-header-inner">
+        <div class="brand"><span class="brand-mark"></span><span>TripZone DDL 기준</span></div>
+        <nav class="nav">
+          <a href="../index.html">대시보드</a>
+          <a href="./requirements.html">요구사항</a>
+          <a href="./features.html">기능</a>
+          <a href="./structure.html">구조</a>
+          <a class="active" href="./database.html">DB</a>
+          <a href="./company.html">통합 기준</a>
+          <a href="../presentation/index.html">발표자료</a>
+        </nav>
+      </div>
+    </header>
+    <main class="shell doc-layout">
+      <aside class="doc-sidebar">
+        <div class="sidebar-card">
+          <h2>DDL 기준</h2>
+          <p>실행 기준은 <span class="code-chip">tripzone-ddl-v2.sql</span>이며, 이 페이지는 제출/검토용 요약 뷰다.</p>
+          <div class="doc-links-card">
+            <h3>포함 범위</h3>
+            <div class="doc-links-list">
+              <a class="active" href="#summary">테이블군 요약</a>
+              <a href="#rules">제약/인덱스 기준</a>
+              <a href="#snippet">원문 스니펫</a>
+            </div>
+          </div>
+        </div>
+      </aside>
+      <div class="doc-main">
+        <section class="content-block" id="summary">
+          <p class="eyebrow">DDL Summary</p>
+          <h2>테이블군 요약</h2>
+          <div class="doc-kpi-grid">
+            <div class="doc-kpi"><strong>18+</strong><span>회원, 상품, 예약, 혜택, 운영, 문의 핵심 테이블</span></div>
+            <div class="doc-kpi"><strong>6</strong><span>주요 상태 모델: 회원, 판매자, 숙소, 객실, 예약, 결제/문의</span></div>
+            <div class="doc-kpi"><strong>Oracle</strong><span>NUMBER(10), DATE, VARCHAR2 기반 스키마</span></div>
+          </div>
+          <div class="card-grid" style="margin-top: 18px;">
+            <div class="list-card">
+              <h3>회원 / 권한</h3>
+              <ul>
+                <li>MEMBER_GRADES</li>
+                <li>USERS</li>
+                <li>USER_AUTH_PROVIDERS</li>
+                <li>USER_ROLES</li>
+                <li>USER_REFRESH_TOKENS</li>
+                <li>HOST_PROFILES</li>
+              </ul>
+            </div>
+            <div class="list-card">
+              <h3>상품 / 예약</h3>
+              <ul>
+                <li>LODGINGS</li>
+                <li>ROOMS</li>
+                <li>BOOKINGS</li>
+                <li>PAYMENTS</li>
+                <li>LODGING_IMAGES</li>
+              </ul>
+            </div>
+            <div class="list-card">
+              <h3>혜택 / 운영</h3>
+              <ul>
+                <li>EVENTS</li>
+                <li>COUPONS</li>
+                <li>USER_COUPONS</li>
+                <li>EVENT_COUPONS</li>
+                <li>MILEAGE_HISTORY</li>
+                <li>AUDIT_LOGS</li>
+              </ul>
+            </div>
+            <div class="list-card">
+              <h3>리뷰 / 문의</h3>
+              <ul>
+                <li>REVIEWS</li>
+                <li>REVIEW_IMAGES</li>
+                <li>WISHLISTS</li>
+                <li>INQUIRY_ROOMS</li>
+                <li>INQUIRY_MESSAGES</li>
+              </ul>
+            </div>
+          </div>
+        </section>
+
+        <section class="content-block" id="rules">
+          <p class="eyebrow">Constraints</p>
+          <h2>제약 / 인덱스 기준</h2>
+          <ul>
+            <li>이메일 유니크, 권한 복합 유니크, 판매자 사업자번호 유니크</li>
+            <li>날짜 범위는 <span class="code-chip">CHECK_OUT_DATE &gt; CHECK_IN_DATE</span> 기준</li>
+            <li>환불 금액은 결제 금액을 초과할 수 없다.</li>
+            <li>회원 쿠폰 상태는 <span class="code-chip">ISSUED / USED / EXPIRED / CANCELED</span>만 허용한다.</li>
+            <li>예약/결제/숙소/문의는 운영 조회용 인덱스를 별도로 둔다.</li>
+          </ul>
+        </section>
+
+        <section class="content-block" id="snippet">
+          <p class="eyebrow">Source Snippet</p>
+          <h2>실행 기준 원문 일부</h2>
+          <pre class="code-block">-- TripZone company-grade DDL v2
+-- Oracle-style schema
+
+CREATE TABLE MEMBER_GRADES (
+    GRADE_NO NUMBER(10) NOT NULL,
+    GRADE_CODE VARCHAR2(30) NOT NULL,
+    GRADE_NAME VARCHAR2(50) NOT NULL,
+    MIN_TOTAL_AMOUNT NUMBER(12) DEFAULT 0 NOT NULL,
+    MIN_STAY_COUNT NUMBER(10) DEFAULT 0 NOT NULL,
+    MILEAGE_RATE NUMBER(5,2) DEFAULT 0 NOT NULL,
+    BENEFIT_DESC VARCHAR2(500),
+    STATUS VARCHAR2(20) DEFAULT 'ACTIVE' NOT NULL,
+    SORT_ORDER NUMBER(3) DEFAULT 1 NOT NULL,
+    REG_DATE DATE DEFAULT SYSDATE NOT NULL,
+    UPD_DATE DATE DEFAULT SYSDATE NOT NULL
+);
+
+CREATE TABLE USERS (
+    USER_NO NUMBER(10) NOT NULL,
+    USER_NAME VARCHAR2(100) NOT NULL,
+    EMAIL VARCHAR2(100) NOT NULL,
+    PHONE VARCHAR2(20) NOT NULL,
+    GRADE_NO NUMBER(10),
+    MILEAGE NUMBER(12) DEFAULT 0 NOT NULL,
+    ENABLED CHAR(1) DEFAULT '1' NOT NULL,
+    USER_STATUS VARCHAR2(20) DEFAULT 'ACTIVE' NOT NULL,
+    DELETED_AT DATE
+);
+
+CREATE TABLE HOST_PROFILES (
+    HOST_NO NUMBER(10) NOT NULL,
+    USER_NO NUMBER(10) NOT NULL,
+    BUSINESS_NAME VARCHAR2(100) NOT NULL,
+    BUSINESS_NUMBER VARCHAR2(50) NOT NULL,
+    OWNER_NAME VARCHAR2(100) NOT NULL,
+    APPROVAL_STATUS VARCHAR2(20) DEFAULT 'PENDING' NOT NULL
+);
+
+CREATE TABLE LODGINGS (
+    LODGING_NO NUMBER(10) NOT NULL,
+    HOST_NO NUMBER(10) NOT NULL,
+    LODGING_NAME VARCHAR2(200) NOT NULL,
+    LODGING_TYPE VARCHAR2(50) NOT NULL,
+    REGION VARCHAR2(100) NOT NULL,
+    ADDRESS VARCHAR2(300) NOT NULL,
+    LATITUDE NUMBER(10,7),
+    LONGITUDE NUMBER(10,7),
+    DESCRIPTION VARCHAR2(2000),
+    CHECK_IN_TIME VARCHAR2(20),
+    CHECK_OUT_TIME VARCHAR2(20),
+    STATUS VARCHAR2(20) DEFAULT 'ACTIVE' NOT NULL
+);
+
+CREATE TABLE ROOMS (
+    ROOM_NO NUMBER(10) NOT NULL,
+    LODGING_NO NUMBER(10) NOT NULL,
+    ROOM_NAME VARCHAR2(200) NOT NULL,
+    ROOM_TYPE VARCHAR2(50) NOT NULL,
+    MAX_GUEST_COUNT NUMBER(5) NOT NULL,
+    PRICE_PER_NIGHT NUMBER(10) NOT NULL,
+    STATUS VARCHAR2(20) DEFAULT 'AVAILABLE' NOT NULL
+);
+
+CREATE TABLE BOOKINGS (
+    BOOKING_NO NUMBER(10) NOT NULL,
+    USER_NO NUMBER(10) NOT NULL,
+    ROOM_NO NUMBER(10) NOT NULL,
+    CHECK_IN_DATE DATE NOT NULL,
+    CHECK_OUT_DATE DATE NOT NULL,
+    GUEST_COUNT NUMBER(5) NOT NULL,
+    PRICE_PER_NIGHT NUMBER(10) NOT NULL,
+    DISCOUNT_AMOUNT NUMBER(10) DEFAULT 0 NOT NULL,
+    TOTAL_PRICE NUMBER(10) NOT NULL,
+    STATUS VARCHAR2(20) DEFAULT 'PENDING' NOT NULL
+);
+
+CREATE TABLE PAYMENTS (
+    PAYMENT_NO NUMBER(10) NOT NULL,
+    BOOKING_NO NUMBER(10) NOT NULL,
+    PAYMENT_METHOD VARCHAR2(30) NOT NULL,
+    PG_PROVIDER VARCHAR2(50),
+    PAYMENT_AMOUNT NUMBER(10) NOT NULL,
+    REFUND_AMOUNT NUMBER(10) DEFAULT 0 NOT NULL,
+    PAYMENT_STATUS VARCHAR2(30) DEFAULT 'READY' NOT NULL
+);
+
+CREATE TABLE INQUIRY_ROOMS (
+    INQUIRY_ROOM_NO NUMBER(10) NOT NULL,
+    USER_NO NUMBER(10) NOT NULL,
+    HOST_NO NUMBER(10),
+    LODGING_NO NUMBER(10),
+    BOOKING_NO NUMBER(10),
+    TITLE VARCHAR2(200) NOT NULL,
+    INQUIRY_TYPE VARCHAR2(30) NOT NULL,
+    ROOM_STATUS VARCHAR2(20) DEFAULT 'OPEN' NOT NULL
+);
+
+CREATE TABLE INQUIRY_MESSAGES (
+    INQUIRY_MESSAGE_NO NUMBER(10) NOT NULL,
+    INQUIRY_ROOM_NO NUMBER(10) NOT NULL,
+    USER_NO NUMBER(10) NOT NULL,
+    MESSAGE_CONTENT CLOB NOT NULL,
+    IS_READ CHAR(1) DEFAULT '0' NOT NULL
+);
+
+-- 상세 전체 원문은 docs/tripzone-ddl-v2.sql 기준</pre>
+        </section>
+      </div>
+    </main>
+  </body>
+</html>

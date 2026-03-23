@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>TripZone Design Deliverables</title>
+    <title>TripZone 설계 대시보드</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -17,14 +17,15 @@
       <div class="floating-header-inner">
         <div class="brand">
           <span class="brand-mark"></span>
-          <span>TripZone 설계 기준 산출물</span>
+          <span>TripZone 설계 대시보드</span>
         </div>
         <nav class="nav">
-          <a class="active" href="./index.html">홈</a>
+          <a class="active" href="./index.html">대시보드</a>
           <a href="./docs/requirements.html">요구사항</a>
           <a href="./docs/features.html">기능</a>
           <a href="./docs/structure.html">구조</a>
           <a href="./docs/database.html">DB</a>
+          <a href="./docs/company.html">통합 기준</a>
           <a href="./presentation/index.html">발표자료</a>
         </nav>
       </div>
@@ -33,148 +34,177 @@
     <main class="shell">
       <section class="hero">
         <div class="hero-card">
-          <div>
-            <p class="eyebrow">Final Design Package</p>
-            <h1>설계 기준 전용 제출물과 발표 자료를 분리한 최종 패키지</h1>
+          <div class="hero-copy">
+            <p class="eyebrow">Design Dashboard</p>
+            <h1>설계도, 기준서, DDL, 발표자료를 한 번에 관리하는 제출용 대시보드</h1>
             <p>
-              이 산출물은 기존 demo 구현과 분리해서, 현재 고정된 설계 기준만으로 다시 정리한
-              제출용 HTML 세트다. 루트 패키지명, 도메인 구조, DB 상태값, 문의 모델 같은 중요한
-              기준은 설계서에 맞춰 고정했다.
+              이 패키지는 TripZone의 요구사항, 기능, 구조, DB, 통합 기준, 개정 코멘트, 발표자료를
+              하나의 문서 허브로 다시 묶은 제출용 HTML 세트다. 발표 전 점검, 제출 직전 확인,
+              PDF 변환, 팀원 공유까지 한 화면에서 바로 이동할 수 있게 구성했다.
             </p>
-            <div class="hero-metrics">
-              <div class="metric">
-                <strong>4</strong>
-                <span>제출용 명세서 HTML</span>
-              </div>
-              <div class="metric">
-                <strong>1</strong>
-                <span>발표용 PPT HTML</span>
-              </div>
-              <div class="metric">
-                <strong>com.kh.trip</strong>
-                <span>루트 패키지 기준 고정</span>
-              </div>
+            <div class="cta-row">
+              <a class="button primary" href="./docs/requirements.html">설계 문서 보기</a>
+              <a class="button secondary" href="./presentation/index.html">발표자료 열기</a>
+            </div>
+            <div class="hero-note">
+              <span>9개 설계 문서</span>
+              <span>1개 발표자료</span>
+              <span>TripZone 기준 고정</span>
             </div>
           </div>
-          <div class="hero-panel">
-            <div class="glass-card">
-              <strong>고정 기준</strong>
-              <p>구조명세서는 <span class="code-chip">com.kh.trip</span>, 문의는 <span class="code-chip">InquiryRoom / InquiryMessage</span>, DB는 최신 DDL 기준으로 정리했다.</p>
-            </div>
-            <div class="glass-card">
-              <strong>재사용 범위</strong>
-              <p>trip-demo에서는 발표 스타일 감각과 슬라이드 인터랙션만 추출했다. 내용과 산출물 구조는 새로 구성했다.</p>
-            </div>
-            <div class="glass-card">
-              <strong>사용 목적</strong>
-              <p>제출용 명세서, 발표용 HTML, 인쇄/PDF 변환용 중간 결과물로 바로 사용할 수 있다.</p>
+          <div class="hero-summary">
+            <div class="hero-summary-card">
+              <div class="hero-summary-head">
+                <p class="eyebrow">Quick Brief</p>
+                <strong>제출 패키지 한눈에</strong>
+              </div>
+              <div class="hero-summary-list">
+                <div class="hero-summary-item">
+                  <span class="hero-summary-label">핵심 기준</span>
+                  <p><span class="code-chip">com.kh.trip</span>, <span class="code-chip">InquiryRoom / InquiryMessage</span>, 최신 DDL과 상태 모델 기준 고정</p>
+                </div>
+                <div class="hero-summary-item">
+                  <span class="hero-summary-label">문서 구성</span>
+                  <p>요구사항, 기능, 구조, DB, 통합 기준서, 구조 v2, 제출 안내, 코멘트, DDL 요약 분리 페이지 제공</p>
+                </div>
+                <div class="hero-summary-item">
+                  <span class="hero-summary-label">사용 목적</span>
+                  <p>발표, 제출, 인쇄, PDF 변환, 팀원 공유까지 한 세트로 관리</p>
+                </div>
+              </div>
             </div>
           </div>
         </div>
       </section>
 
       <section class="section">
-        <div class="section-head">
-          <div>
-            <p class="eyebrow">Submission Set</p>
-            <h2 class="section-title">명세서 HTML</h2>
-          </div>
-          <p class="section-subtitle">문서형 레이아웃과 인쇄 대응을 고려한 제출용 페이지</p>
-        </div>
-        <div class="card-grid">
-          <a class="doc-card" href="./docs/requirements.html">
-            <strong>요구사항 명세서</strong>
-            <p>프로젝트 목적, 사용자 구분, 핵심 요구사항, 비기능 요구사항을 정리한 제출용 문서.</p>
-            <div class="tag-row">
-              <span class="tag">범위</span>
-              <span class="tag">역할</span>
-              <span class="tag">핵심 요구</span>
-            </div>
-          </a>
-          <a class="doc-card" href="./docs/features.html">
-            <strong>기능 명세서</strong>
-            <p>회원, 판매자, 숙소, 예약, 결제, 리뷰, 문의, 운영 기능을 기능 단위로 정리한 문서.</p>
-            <div class="tag-row">
-              <span class="tag">기능 분해</span>
-              <span class="tag">상태</span>
-              <span class="tag">관리</span>
-            </div>
-          </a>
-          <a class="doc-card" href="./docs/structure.html">
-            <strong>구조 명세서</strong>
-            <p>루트 패키지명과 레이어 구조, 도메인별 클래스 구성을 설계 기준으로 재정리한 문서.</p>
-            <div class="tag-row">
-              <span class="tag">com.kh.trip</span>
-              <span class="tag">레이어</span>
-              <span class="tag">도메인</span>
-            </div>
-          </a>
-          <a class="doc-card" href="./docs/database.html">
-            <strong>DB 명세서</strong>
-            <p>주요 테이블, 관계, 상태값, 정합성 규칙을 제출용 형태로 요약한 문서.</p>
-            <div class="tag-row">
-              <span class="tag">DDL 기준</span>
-              <span class="tag">관계</span>
-              <span class="tag">상태값</span>
-            </div>
-          </a>
+        <div class="dashboard-band">
+          <div class="dashboard-stat"><strong>9</strong><span>설계 문서 HTML 페이지</span></div>
+          <div class="dashboard-stat"><strong>1</strong><span>발표자료 HTML deck</span></div>
+          <div class="dashboard-stat"><strong>3</strong><span>요구사항, 통합 기준, 구조 v2 기준 축</span></div>
+          <div class="dashboard-stat"><strong>Front Only</strong><span>백엔드 팀원이 바로 이어붙일 수 있는 설계 허브</span></div>
         </div>
       </section>
 
       <section class="section">
-        <div class="section-head">
-          <div>
-            <p class="eyebrow">Presentation</p>
-            <h2 class="section-title">발표용 HTML Deck</h2>
+        <div class="dashboard-stack">
+          <div class="dashboard-group">
+            <div class="dashboard-group-head">
+              <div>
+                <p class="eyebrow">Core Documents</p>
+                <h3>핵심 설계 문서</h3>
+                <p>발표와 제출에서 가장 먼저 쓰는 4종 요약 문서</p>
+              </div>
+            </div>
+            <div class="dashboard-doc-grid">
+              <a class="dashboard-doc-card" href="./docs/requirements.html">
+                <div class="dashboard-doc-top"><span class="dashboard-doc-kind">요구</span><span class="dashboard-doc-index">01</span></div>
+                <h4>요구사항 명세서</h4>
+                <p>프로젝트 개요, 사용자 구분, 핵심 요구사항, 비기능 요구사항을 읽는 출발점.</p>
+                <div class="dashboard-doc-meta"><span>범위</span><span>역할</span><span>핵심 요구</span></div>
+              </a>
+              <a class="dashboard-doc-card" href="./docs/features.html">
+                <div class="dashboard-doc-top"><span class="dashboard-doc-kind">기능</span><span class="dashboard-doc-index">02</span></div>
+                <h4>기능 명세서</h4>
+                <p>회원, 판매자, 관리자, 예약, 결제, 문의, 마이페이지까지 흐름 단위로 정리한 문서.</p>
+                <div class="dashboard-doc-meta"><span>기능 분해</span><span>상태</span><span>흐름</span></div>
+              </a>
+              <a class="dashboard-doc-card" href="./docs/structure.html">
+                <div class="dashboard-doc-top"><span class="dashboard-doc-kind">구조</span><span class="dashboard-doc-index">03</span></div>
+                <h4>구조 명세서</h4>
+                <p>루트 패키지명과 레이어 구조, 도메인 구성을 제출용 요약으로 본다.</p>
+                <div class="dashboard-doc-meta"><span>com.kh.trip</span><span>레이어</span><span>도메인</span></div>
+              </a>
+              <a class="dashboard-doc-card" href="./docs/database.html">
+                <div class="dashboard-doc-top"><span class="dashboard-doc-kind">DB</span><span class="dashboard-doc-index">04</span></div>
+                <h4>DB 명세서</h4>
+                <p>테이블군, 관계, 상태값, 정합성 규칙을 제출용으로 압축한 DB 문서.</p>
+                <div class="dashboard-doc-meta"><span>테이블</span><span>관계</span><span>상태값</span></div>
+              </a>
+            </div>
           </div>
-          <p class="section-subtitle">trip-demo의 좋은 발표 감각은 가져오고, 내용은 설계 기준으로 교체한 슬라이드</p>
+
+          <div class="dashboard-group">
+            <div class="dashboard-group-head">
+              <div>
+                <p class="eyebrow">Extended Set</p>
+                <h3>확장 기준 문서</h3>
+                <p>설계 충돌을 풀고 팀원과 공유할 때 같이 봐야 하는 보강 문서</p>
+              </div>
+            </div>
+            <div class="dashboard-doc-grid">
+              <a class="dashboard-doc-card" href="./docs/company.html">
+                <div class="dashboard-doc-top"><span class="dashboard-doc-kind">통합</span><span class="dashboard-doc-index">05</span></div>
+                <h4>통합 기준서</h4>
+                <p>제품 범위, 설계 원칙, 도메인 모델, 상태 모델, 인덱스 기준을 통합한 기준서.</p>
+                <div class="dashboard-doc-meta"><span>3 Role</span><span>문의 채팅형</span><span>우선순위</span></div>
+              </a>
+              <a class="dashboard-doc-card" href="./docs/structure-v2.html">
+                <div class="dashboard-doc-top"><span class="dashboard-doc-kind">구조 v2</span><span class="dashboard-doc-index">06</span></div>
+                <h4>구조 기준 v2</h4>
+                <p>스프레드시트 구조명세와 최신 도메인 설계를 맞춘 상세 구조 교정본.</p>
+                <div class="dashboard-doc-meta"><span>오타 교정</span><span>패키지</span><span>클래스</span></div>
+              </a>
+              <a class="dashboard-doc-card" href="./docs/ddl.html">
+                <div class="dashboard-doc-top"><span class="dashboard-doc-kind">DDL</span><span class="dashboard-doc-index">07</span></div>
+                <h4>DDL 기준</h4>
+                <p>실행용 SQL의 테이블군, 제약, 인덱스 기준을 요약해서 확인하는 페이지.</p>
+                <div class="dashboard-doc-meta"><span>Oracle</span><span>제약</span><span>원문 스니펫</span></div>
+              </a>
+              <a class="dashboard-doc-card" href="./docs/submission-guide.html">
+                <div class="dashboard-doc-top"><span class="dashboard-doc-kind">제출</span><span class="dashboard-doc-index">08</span></div>
+                <h4>제출 문서 안내</h4>
+                <p>문서 역할과 제출 순서를 한 번에 보는 제출용 안내 페이지.</p>
+                <div class="dashboard-doc-meta"><span>목록</span><span>역할</span><span>순서</span></div>
+              </a>
+              <a class="dashboard-doc-card" href="./docs/comments.html">
+                <div class="dashboard-doc-top"><span class="dashboard-doc-kind">코멘트</span><span class="dashboard-doc-index">09</span></div>
+                <h4>수정 코멘트</h4>
+                <p>무엇을 왜 고쳤는지, 무엇을 유지했는지 설명하는 수정 이력 문서.</p>
+                <div class="dashboard-doc-meta"><span>수정 이유</span><span>유지 항목</span><span>서비스 검증</span></div>
+              </a>
+            </div>
+          </div>
         </div>
-        <div class="card-grid">
-          <div class="list-card">
-            <h3>포함 내용</h3>
-            <ul>
-              <li>프로젝트 개요와 문제 정의</li>
-              <li>3-role 구조와 패키지 기준</li>
-              <li>문의 구조 변경과 DB 상태 모델</li>
-              <li>프론트 우선 구현 범위와 최소 백엔드 고정점</li>
-            </ul>
-          </div>
-          <div class="list-card">
-            <h3>사용 방법</h3>
-            <ul>
-              <li>화살표 키 또는 우측 네비게이션으로 슬라이드 이동</li>
-              <li>브라우저 전체화면에서 발표</li>
-              <li>스크롤형이지만 PPT 느낌으로 구성</li>
-            </ul>
+      </section>
+
+      <section class="section">
+        <div class="dashboard-group">
+          <div class="dashboard-group-head">
+            <div>
+              <p class="eyebrow">Presentation</p>
+              <h3>발표자료 요약</h3>
+              <p>발표용 HTML deck 핵심 흐름과 문서 연결 지점을 한 번에 정리한 섹션</p>
+            </div>
             <div class="cta-row">
               <a class="button primary" href="./presentation/index.html">발표자료 열기</a>
             </div>
           </div>
-        </div>
-      </section>
-
-      <section class="section">
-        <div class="section-head">
-          <div>
-            <p class="eyebrow">Implementation Boundary</p>
-            <h2 class="section-title">이번 작업의 구현 경계</h2>
-          </div>
-        </div>
-        <div class="card-grid">
-          <div class="info-card">
-            <strong>프론트 중심</strong>
-            <p>제출용 문서 HTML과 발표용 HTML을 우선 구현한다. 실제 백엔드 구현은 팀원 작업 범위로 남겨둔다.</p>
-          </div>
-          <div class="info-card">
-            <strong>백엔드 고정점만 유지</strong>
-            <p>루트 패키지명, 도메인명, 최소 엔티티 기준, 문의 구조, 상태값 기준만 문서로 명확히 고정한다.</p>
+          <div class="dashboard-summary-grid">
+            <div class="summary-sheet">
+              <h4>슬라이드 흐름</h4>
+              <div class="summary-list">
+                <div class="summary-item"><strong>01. 개요 / 문제 정의</strong><span>TripZone를 demo 개선이 아니라 설계 기준 고정 작업으로 소개</span></div>
+                <div class="summary-item"><strong>02. 범위 / 3-role 구조</strong><span>일반회원, 판매자, 관리자 역할과 제품 범위를 정리</span></div>
+                <div class="summary-item"><strong>03. 구조 / DB / 문의 모델</strong><span>패키지, 상태 모델, InquiryRoom/InquiryMessage 구조를 설명</span></div>
+                <div class="summary-item"><strong>04. 프론트 우선 / 제출물 구성</strong><span>프론트 중심 구현 경계와 제출 문서 세트를 마무리</span></div>
+              </div>
+            </div>
+            <div class="quick-sheet">
+              <h4>빠른 이동</h4>
+              <div class="quick-list">
+                <a class="quick-link" href="./docs/company.html"><strong>통합 기준서 먼저 보기</strong><span>발표 전에 전체 기준을 한 장으로 빠르게 확인</span></a>
+                <a class="quick-link" href="./docs/comments.html"><strong>수정 코멘트 확인</strong><span>왜 구조를 바꿨는지 설명이 필요할 때 바로 이동</span></a>
+                <a class="quick-link" href="./docs/ddl.html"><strong>DDL 기준 열기</strong><span>DB 질문이 들어오면 바로 테이블군과 제약 기준 확인</span></a>
+              </div>
+            </div>
           </div>
         </div>
       </section>
     </main>
 
     <footer class="shell footer">
-      TripZone 설계 기준 전용 산출물 패키지
+      TripZone 설계도 / 발표자료 통합 대시보드
     </footer>
   </body>
 </html>
