@@ -1,25 +1,16 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import MyPageLayout from "../../components/user/MyPageLayout";
+import {
+  getInquiryCounts,
+  INQUIRY_STATUS_LABELS,
+  INQUIRY_TYPE_LABELS,
+} from "../../features/mypage/mypageViewModels";
 import { readMyInquiryThreads } from "../../utils/myInquiryCenter";
-
-const STATUS_LABELS = {
-  OPEN: "접수",
-  ANSWERED: "답변 완료",
-  CLOSED: "종료",
-  BLOCKED: "차단",
-};
-
-const TYPE_LABELS = {
-  LODGING: "숙소 문의",
-  BOOKING: "예약 문의",
-  PAYMENT: "결제 문의",
-  SYSTEM: "시스템 문의",
-};
 
 export default function MyInquiriesPage() {
   const [rows, setRows] = useState([]);
-  const answeredCount = rows.filter((item) => item.status === "ANSWERED").length;
+  const { answeredCount } = getInquiryCounts(rows);
 
   useEffect(() => {
     setRows(readMyInquiryThreads());
@@ -84,9 +75,9 @@ export default function MyInquiriesPage() {
               <div className="payment-row-main">
                 <div className="payment-row-copy inquiry-list-main">
                   <div className="payment-row-topline">
-                    <span className="inquiry-list-type">{TYPE_LABELS[item.type] ?? item.type}</span>
+                    <span className="inquiry-list-type">{INQUIRY_TYPE_LABELS[item.type] ?? item.type}</span>
                     <span className={`table-code code-${item.status.toLowerCase()}`}>
-                      {STATUS_LABELS[item.status] ?? item.status}
+                      {INQUIRY_STATUS_LABELS[item.status] ?? item.status}
                     </span>
                     <span>{item.bookingNo}</span>
                   </div>

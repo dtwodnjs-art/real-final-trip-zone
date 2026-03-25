@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { clearAuthSession, readAuthSession } from "../../utils/authSession";
+import { clearAuthSession, readAuthSession } from "../../features/auth/authSession";
+import { getHeaderRoleLinks, getMembershipLabel } from "../../features/auth/authViewModels";
 
 export default function Header() {
   const location = useLocation();
@@ -32,7 +33,8 @@ export default function Header() {
     navigate("/");
   };
 
-  const membershipLabel = session?.provider === "KAKAO" ? "Basic" : session?.provider === "NAVER" ? "Naver" : session?.provider === "GOOGLE" ? "Google" : "Basic";
+  const membershipLabel = getMembershipLabel(session);
+  const roleLinks = getHeaderRoleLinks(session);
 
   return (
     <header className="header">
@@ -70,14 +72,11 @@ export default function Header() {
                     </p>
                   </div>
                   <div className="header-profile-dropdown-links">
-                    <Link className="header-dropdown-link" to="/my">마이페이지</Link>
-                    <Link className="header-dropdown-link" to="/my/bookings">예약 내역</Link>
-                    <Link className="header-dropdown-link" to="/my/wishlist">찜 목록</Link>
-                    <Link className="header-dropdown-link" to="/my/mileage">마일리지</Link>
-                    <Link className="header-dropdown-link" to="/my/coupons">쿠폰</Link>
-                    <Link className="header-dropdown-link" to="/my/profile">내 정보 관리</Link>
-                    <Link className="header-dropdown-link" to="/my/payments">결제 내역</Link>
-                    <Link className="header-dropdown-link" to="/my/inquiries">문의센터</Link>
+                    {roleLinks.map((item) => (
+                      <Link key={item.to} className="header-dropdown-link" to={item.to}>
+                        {item.label}
+                      </Link>
+                    ))}
                   </div>
                   <button type="button" className="header-dropdown-logout" onClick={handleLogout}>
                     로그아웃

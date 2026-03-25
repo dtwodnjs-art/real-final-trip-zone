@@ -1,21 +1,11 @@
 import { useState } from "react";
 import MyPageLayout from "../../components/user/MyPageLayout";
-import { mileageHistoryRows } from "../../data/siteData";
+import { mileageHistoryRows } from "../../data/mypageData";
+import { getMileageSummary } from "../../features/mypage/mypageViewModels";
 
 export default function MyMileagePage() {
   const [filter, setFilter] = useState("all");
-  const earnedThisMonth = mileageHistoryRows
-    .filter((item) => item.type === "적립" && item.time.startsWith("2026.03"))
-    .reduce((sum, item) => sum + Number(item.amount.replace(/[+,]/g, "")), 0);
-  const usedThisMonth = mileageHistoryRows
-    .filter((item) => item.type === "사용" && item.time.startsWith("2026.03"))
-    .reduce((sum, item) => sum + Number(item.amount.replace(/[-,]/g, "")), 0);
-  const filteredRows = mileageHistoryRows.filter((item) => {
-    if (filter === "all") return true;
-    if (filter === "earn") return item.type === "적립";
-    if (filter === "use") return item.type === "사용";
-    return false;
-  });
+  const { earnedThisMonth, usedThisMonth, filteredRows } = getMileageSummary(mileageHistoryRows, filter);
 
   return (
     <MyPageLayout>

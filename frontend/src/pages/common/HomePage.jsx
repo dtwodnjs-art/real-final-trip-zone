@@ -1,389 +1,21 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { createPortal } from "react-dom";
 import { Link, useNavigate } from "react-router-dom";
 import {
   destinationStats,
   homeSearchDefaults,
-  lodgingCollections,
-  lodgings,
   promoBanners,
-  searchSuggestionItems,
-} from "../../data/siteData";
-
-const WEEK_DAYS = ["일", "월", "화", "수", "목", "금", "토"];
-const CHOSEONG = ["ㄱ", "ㄲ", "ㄴ", "ㄷ", "ㄸ", "ㄹ", "ㅁ", "ㅂ", "ㅃ", "ㅅ", "ㅆ", "ㅇ", "ㅈ", "ㅉ", "ㅊ", "ㅋ", "ㅌ", "ㅍ", "ㅎ"];
-const SEARCH_TABS = [{ key: "domestic", label: "국내숙소", placeholder: "제주, 부산, 강릉, 서울" }];
-
-function clamp(value, min, max) {
-  return Math.max(min, Math.min(max, value));
-}
-
-function normalizeText(value) {
-  return String(value ?? "").trim().toLowerCase();
-}
-
-function getInitialConsonants(value) {
-  return Array.from(String(value ?? "")).map((char) => {
-    const code = char.charCodeAt(0) - 44032;
-    if (code < 0 || code > 11171) return char.toLowerCase();
-    return CHOSEONG[Math.floor(code / 588)] ?? "";
-  }).join("");
-}
-
-function matchesKeyword(item, keyword) {
-  const term = normalizeText(keyword);
-  if (!term) return false;
-
-  const fields = [item.label, item.subtitle, item.region, ...(item.aliases ?? [])]
-    .filter(Boolean)
-    .map((field) => normalizeText(field));
-  const initialFields = [item.label, item.subtitle, item.region, ...(item.aliases ?? [])]
-    .filter(Boolean)
-    .map((field) => getInitialConsonants(field));
-
-  return fields.some((field) => field.includes(term)) || initialFields.some((field) => field.includes(term));
-}
-
-function computePosition(anchorRect, wantedWidth, wantedHeight, options = {}) {
-  const { preferBelow = false } = options;
-  const margin = 12;
-  const viewportWidth = window.innerWidth;
-  const viewportHeight = window.innerHeight;
-  const left = clamp(anchorRect.left, margin, viewportWidth - wantedWidth - margin);
-  let top = anchorRect.bottom + 8;
-
-  if (!preferBelow && top + wantedHeight > viewportHeight - margin) {
-    top = clamp(anchorRect.top - wantedHeight - 8, margin, viewportHeight - wantedHeight - margin);
-  }
-
-  return { left, top };
-}
-
-function parseISO(value) {
-  if (!value) return null;
-  const date = new Date(value);
-  return Number.isNaN(date.getTime()) ? null : date;
-}
-
-function toISO(date) {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
-}
-
-function monthGrid(baseDate) {
-  const first = new Date(baseDate.getFullYear(), baseDate.getMonth(), 1);
-  const start = new Date(first);
-  start.setDate(1 - first.getDay());
-  return Array.from({ length: 42 }, (_, index) => {
-    const day = new Date(start);
-    day.setDate(start.getDate() + index);
-    return day;
-  });
-}
-
-function sameDate(left, right) {
-  return (
-    left &&
-    right &&
-    left.getFullYear() === right.getFullYear() &&
-    left.getMonth() === right.getMonth() &&
-    left.getDate() === right.getDate()
-  );
-}
-
-function betweenDate(day, start, end) {
-  if (!start || !end) return false;
-  const time = day.getTime();
-  return time > start.getTime() && time < end.getTime();
-}
-
-function formatDateSummary(checkIn, checkOut) {
-  const start = parseISO(checkIn);
-  const end = parseISO(checkOut);
-  if (!start || !end) return "날짜를 선택하세요";
-  const nights = Math.max(0, Math.floor((end.getTime() - start.getTime()) / 86400000));
-  return `${start.getMonth() + 1}.${start.getDate()} ${WEEK_DAYS[start.getDay()]} - ${end.getMonth() + 1}.${end.getDate()} ${WEEK_DAYS[end.getDay()]} · ${nights}박`;
-}
-
-function buildCollectionCards(collection) {
-  const base = collection.ids
-    .map((id) => lodgings.find((item) => item.id === id))
-    .filter(Boolean);
-
-  return Array.from({ length: 4 }, (_, index) => {
-    const lodging = base[index % base.length];
-    const currentPrice = Number(String(lodging.price).replace(/[^\d]/g, ""));
-    const rateSeed = [0, 0.08, 0.11, 0.14, 0.17][(lodging.id + index) % 5];
-    const hasDiscount = (lodging.id + index) % 4 !== 0;
-    const originalPrice = hasDiscount
-      ? Math.round((currentPrice / (1 - rateSeed)) / 1000) * 1000
-      : currentPrice;
-    const discountRate = hasDiscount ? Math.round((1 - currentPrice / originalPrice) * 100) : 0;
-    return {
-      ...lodging,
-      key: `${collection.region}-${lodging.id}-${index}`,
-      benefit: index % 2 === 0 ? lodging.benefit : lodging.highlights[index % lodging.highlights.length],
-      originalPrice: hasDiscount ? `${originalPrice.toLocaleString()}원` : "",
-      discountRate: hasDiscount ? `${discountRate}%` : "",
-    };
-  });
-}
-
-function CalendarMonth({ baseDate, startDate, endDate, onPick }) {
-  const days = monthGrid(baseDate);
-
-  return (
-    <div className="calendar-month">
-      <div className="calendar-month-head">
-        <strong>
-          {baseDate.getFullYear()}.{String(baseDate.getMonth() + 1).padStart(2, "0")}
-        </strong>
-      </div>
-      <div className="calendar-week-row">
-        {WEEK_DAYS.map((day) => (
-          <span key={day}>{day}</span>
-        ))}
-      </div>
-      <div className="calendar-grid">
-        {days.map((day) => {
-          const isCurrentMonth = day.getMonth() === baseDate.getMonth();
-          const isStart = sameDate(day, startDate);
-          const isEnd = sameDate(day, endDate);
-          const isBetween = betweenDate(day, startDate, endDate);
-
-          if (!isCurrentMonth) {
-            return <span key={toISO(day)} className="calendar-day-placeholder" aria-hidden="true" />;
-          }
-
-          return (
-            <button
-              key={toISO(day)}
-              type="button"
-              className={`calendar-day${isStart ? " is-start" : ""}${isEnd ? " is-end" : ""}${isBetween ? " is-between" : ""}`}
-              onClick={() => onPick(day)}
-            >
-              {day.getDate()}
-            </button>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
-
-function SuggestionsPanel({ open, anchorRef, panelRef, recentSearches, filteredSuggestions, keyword, suggestionIcon, activeSuggest, onHoverSuggestion, onPickRecent, onPickSuggestion }) {
-  const [position, setPosition] = useState(null);
-
-  useEffect(() => {
-    if (!open || !anchorRef.current) return;
-
-    const update = () => {
-      const rect = anchorRef.current.getBoundingClientRect();
-      const wantedWidth = clamp(Math.max(rect.width, 420), 420, 520);
-      const next = computePosition(rect, wantedWidth, 340);
-      setPosition({
-        left: next.left,
-        top: next.top,
-        width: wantedWidth,
-        maxHeight: clamp(window.innerHeight - next.top - 12, 220, 360),
-      });
-    };
-
-    update();
-    window.addEventListener("resize", update);
-    window.addEventListener("scroll", update, true);
-    return () => {
-      window.removeEventListener("resize", update);
-      window.removeEventListener("scroll", update, true);
-    };
-  }, [anchorRef, open]);
-
-  if (!open || !position) return null;
-
-  return createPortal(
-    <div
-      ref={panelRef}
-      className="search-floating-panel search-suggestion-panel"
-      style={{
-        left: `${position.left}px`,
-        top: `${position.top}px`,
-        width: `${position.width}px`,
-        maxHeight: `${position.maxHeight}px`,
-      }}
-    >
-      <div className="search-suggestion-group">
-        <span className="search-chip-label">연관 검색</span>
-        <div className="search-suggestion-list search-suggestion-list-stacked">
-          {filteredSuggestions.map((item) => (
-            <button
-              key={`${item.type}-${item.label}`}
-              type="button"
-              className={`search-suggestion-item${filteredSuggestions[activeSuggest] === item ? " is-active" : ""}`}
-              onMouseEnter={() => onHoverSuggestion(filteredSuggestions.findIndex((candidate) => candidate === item))}
-              onClick={() => onPickSuggestion(item)}
-            >
-              <span className="search-suggestion-icon">{suggestionIcon[item.type] ?? "●"}</span>
-              <div className="search-suggestion-copy">
-                <strong>{item.label}</strong>
-                <span>{item.subtitle}</span>
-              </div>
-            </button>
-          ))}
-          {!filteredSuggestions.length ? (
-            <div className="search-empty-state">{keyword.trim() ? "연관 검색 결과가 없습니다." : "지역, 역, 숙소명을 입력해보세요."}</div>
-          ) : null}
-        </div>
-      </div>
-    </div>,
-    document.body,
-  );
-}
-
-function GuestPopover({ open, anchorRef, panelRef, guests, onChange, onClose }) {
-  const [position, setPosition] = useState(null);
-
-  useEffect(() => {
-    if (!open || !anchorRef.current) return;
-
-    const update = () => {
-      const rect = anchorRef.current.getBoundingClientRect();
-      const wantedWidth = clamp(Math.max(rect.width, 320), 280, 360);
-      const next = computePosition(rect, wantedWidth, 156);
-      setPosition({
-        left: next.left,
-        top: next.top,
-        width: wantedWidth,
-      });
-    };
-
-    update();
-    window.addEventListener("resize", update);
-    window.addEventListener("scroll", update, true);
-    return () => {
-      window.removeEventListener("resize", update);
-      window.removeEventListener("scroll", update, true);
-    };
-  }, [anchorRef, open]);
-
-  if (!open || !position) return null;
-
-  return createPortal(
-    <div
-      ref={panelRef}
-      className="search-floating-panel guest-panel"
-      style={{
-        left: `${position.left}px`,
-        top: `${position.top}px`,
-        width: `${position.width}px`,
-      }}
-    >
-      <div className="guest-panel-row">
-        <div>
-          <strong>성인</strong>
-          <span>객실 1개 기준</span>
-        </div>
-        <div className="guest-stepper">
-          <button
-            type="button"
-            className="guest-stepper-button"
-            onClick={() => onChange(String(Math.max(1, Number(guests) - 1)))}
-          >
-            -
-          </button>
-          <strong>{guests}</strong>
-          <button
-            type="button"
-            className="guest-stepper-button"
-            onClick={() => onChange(String(Math.min(8, Number(guests) + 1)))}
-          >
-            +
-          </button>
-        </div>
-      </div>
-      <button type="button" className="primary-button search-flyout-confirm" onClick={onClose}>
-        인원 선택 완료
-      </button>
-    </div>,
-    document.body,
-  );
-}
-
-function DateRangePopover({ open, anchorRef, panelRef, visibleMonth, setVisibleMonth, checkIn, checkOut, onPick, onClose }) {
-  const [position, setPosition] = useState(null);
-
-  useEffect(() => {
-    if (!open || !anchorRef.current) return;
-
-    const update = () => {
-      const rect = anchorRef.current.getBoundingClientRect();
-      const isMobile = window.innerWidth <= 960;
-      const wantedWidth = isMobile ? Math.min(window.innerWidth - 24, 420) : Math.min(window.innerWidth - 24, 640);
-      const next = computePosition(rect, wantedWidth, isMobile ? 540 : 500, { preferBelow: true });
-      setPosition({
-        left: next.left,
-        top: next.top,
-        width: wantedWidth,
-        maxHeight: clamp(window.innerHeight - next.top - 12, 320, isMobile ? 540 : 500),
-        isMobile,
-      });
-    };
-
-    update();
-    window.addEventListener("resize", update);
-    window.addEventListener("scroll", update, true);
-    return () => {
-      window.removeEventListener("resize", update);
-      window.removeEventListener("scroll", update, true);
-    };
-  }, [anchorRef, open]);
-
-  if (!open || !position) return null;
-
-  const startDate = parseISO(checkIn);
-  const endDate = parseISO(checkOut);
-
-  return createPortal(
-    <div
-      ref={panelRef}
-      className="search-floating-panel search-calendar-panel"
-      style={{
-        left: `${position.left}px`,
-        top: `${position.top}px`,
-        width: `${position.width}px`,
-        maxHeight: `${position.maxHeight}px`,
-      }}
-    >
-      <div className="calendar-toolbar">
-        <button type="button" className="calendar-nav" onClick={() => setVisibleMonth((current) => new Date(current.getFullYear(), current.getMonth() - 1, 1))}>
-          이전
-        </button>
-        <button type="button" className="calendar-nav" onClick={() => setVisibleMonth((current) => new Date(current.getFullYear(), current.getMonth() + 1, 1))}>
-          다음
-        </button>
-      </div>
-      <div className="calendar-month-grid" style={{ gridTemplateColumns: position.isMobile ? "1fr" : "repeat(2, minmax(0, 1fr))" }}>
-        <CalendarMonth baseDate={visibleMonth} startDate={startDate} endDate={endDate} onPick={onPick} />
-        {!position.isMobile ? (
-          <CalendarMonth
-            baseDate={new Date(visibleMonth.getFullYear(), visibleMonth.getMonth() + 1, 1)}
-            startDate={startDate}
-            endDate={endDate}
-            onPick={onPick}
-          />
-        ) : null}
-      </div>
-      <div className="calendar-footer">
-        <span className="calendar-footer-text">{formatDateSummary(checkIn, checkOut)}</span>
-        <button type="button" className="primary-button calendar-apply-button" onClick={onClose}>
-          적용
-        </button>
-      </div>
-    </div>,
-    document.body,
-  );
-}
+} from "../../data/homeData";
+import { lodgingCollections } from "../../data/lodgingData";
+import { DateRangePopover, GuestPopover, SuggestionsPanel } from "../../features/home/HomeSearchPanels";
+import { HomeCollectionSection, HomePromoSection } from "../../features/home/HomeSections";
+import { SEARCH_TABS, SUGGESTION_ICON } from "../../features/home/homeConstants";
+import { buildCollectionCards, formatDateSummary, parseISO, toISO } from "../../features/home/homeUtils";
+import {
+  buildHomeSuggestionItems,
+  filterHomeSuggestions,
+  readRecentSearches,
+  writeRecentSearches,
+} from "../../features/home/homeViewModel";
 
 export default function HomePage() {
   const navigate = useNavigate();
@@ -402,58 +34,12 @@ export default function HomePage() {
   const [visibleMonth, setVisibleMonth] = useState(parseISO(homeSearchDefaults.checkIn) ?? new Date());
   const currentTab = SEARCH_TABS.find((tab) => tab.key === activeTab) ?? SEARCH_TABS[0];
 
-  const allSuggestionItems = useMemo(() => {
-    const lodgingItems = lodgings.flatMap((lodging) => [
-      {
-        label: lodging.name,
-        subtitle: `${lodging.type}, ${lodging.region} ${lodging.district}`,
-        type: "hotel",
-        region: lodging.region,
-        aliases: [lodging.district, lodging.address, ...lodging.highlights],
-      },
-      {
-        label: lodging.district,
-        subtitle: `${lodging.region} ${lodging.district}`,
-        type: "region",
-        region: lodging.region,
-        aliases: [lodging.name, lodging.address],
-      },
-      {
-        label: lodging.region,
-        subtitle: `${lodging.region} 인기 숙소`,
-        type: "region",
-        region: lodging.region,
-        aliases: [lodging.district, lodging.name],
-      },
-    ]);
+  const allSuggestionItems = useMemo(() => buildHomeSuggestionItems(), []);
 
-    const merged = [...searchSuggestionItems, ...lodgingItems];
-    const unique = new Map();
-    merged.forEach((item) => {
-      const key = `${item.type}-${item.label}-${item.subtitle}`;
-      if (!unique.has(key)) unique.set(key, item);
-    });
-    return Array.from(unique.values());
-  }, []);
-
-  const startDate = parseISO(searchForm.checkIn);
-  const endDate = parseISO(searchForm.checkOut);
-
-  const filteredSuggestions = useMemo(() => {
-    const keyword = searchForm.keyword.trim();
-    if (!keyword) return [];
-    return allSuggestionItems
-      .filter((item) => matchesKeyword(item, keyword))
-      .slice(0, 8);
-  }, [allSuggestionItems, searchForm.keyword]);
+  const filteredSuggestions = useMemo(() => filterHomeSuggestions(allSuggestionItems, searchForm.keyword), [allSuggestionItems, searchForm.keyword]);
 
   useEffect(() => {
-    try {
-      const stored = JSON.parse(window.localStorage.getItem("tripzone-recent-searches") ?? "[]");
-      setRecentSearches(Array.isArray(stored) ? stored.slice(0, 4) : []);
-    } catch {
-      setRecentSearches([]);
-    }
+    setRecentSearches(readRecentSearches());
   }, []);
 
   useEffect(() => {
@@ -486,9 +72,8 @@ export default function HomePage() {
     if (searchForm.guests) params.set("guests", searchForm.guests);
     if (activeTab !== "domestic") params.set("tab", activeTab);
     if (searchForm.keyword.trim()) {
-      const nextRecent = [searchForm.keyword.trim(), ...recentSearches.filter((item) => item !== searchForm.keyword.trim())].slice(0, 4);
+      const nextRecent = writeRecentSearches(searchForm.keyword, recentSearches);
       setRecentSearches(nextRecent);
-      window.localStorage.setItem("tripzone-recent-searches", JSON.stringify(nextRecent));
     }
     navigate(`/lodgings?${params.toString()}`);
   };
@@ -534,12 +119,6 @@ export default function HomePage() {
     if (event.key === "Escape") {
       setActivePanel(null);
     }
-  };
-
-  const suggestionIcon = {
-    region: "●",
-    hotel: "■",
-    station: "◆",
   };
 
   return (
@@ -630,7 +209,7 @@ export default function HomePage() {
             recentSearches={recentSearches}
             filteredSuggestions={filteredSuggestions}
             keyword={searchForm.keyword}
-            suggestionIcon={suggestionIcon}
+            suggestionIcon={SUGGESTION_ICON}
             activeSuggest={activeSuggest}
             onHoverSuggestion={setActiveSuggest}
             onPickRecent={(item) => {
@@ -667,63 +246,14 @@ export default function HomePage() {
       </section>
 
       <div className="container home-content">
-        <section className="home-section">
-          <div className="home-section-head">
-            <h2>지금 예약이 빠른 특가</h2>
-            <Link className="text-link" to="/events">
-              이벤트 전체 보기
-            </Link>
-          </div>
-          <div className="promo-grid">
-            {promoBanners.map((item) => (
-              <article
-                key={item.title}
-                className={`promo-card promo-${item.accent}`}
-                style={{ backgroundImage: `linear-gradient(180deg, rgba(8, 24, 34, 0.12), rgba(8, 24, 34, 0.58)), url(${item.image})` }}
-              >
-                <strong>{item.title}</strong>
-                <p>{item.subtitle}</p>
-                <span className="promo-date">{item.date}</span>
-              </article>
-            ))}
-          </div>
-        </section>
+        <HomePromoSection promoBanners={promoBanners} />
 
         {lodgingCollections.map((collection) => (
-          <section key={collection.title} className="home-section">
-            <div className="home-section-head">
-              <h2>{collection.title}</h2>
-              <Link className="text-link" to={`/lodgings?region=${collection.region}`}>
-                지역 전체 보기
-              </Link>
-            </div>
-            <div className="lodging-showcase">
-              {buildCollectionCards(collection).map((lodging) => (
-                <Link key={lodging.key} className="showcase-row" to={`/lodgings/${lodging.id}`}>
-                  <div className="rail-card-visual" style={{ backgroundImage: `url(${lodging.image})` }} />
-                  <div className="showcase-copy">
-                    <strong>{lodging.name}</strong>
-                    <div className="showcase-kicker">
-                      {lodging.region} · {lodging.district}
-                      <span className="showcase-review-inline">
-                        ★ {lodging.rating} · {lodging.reviewCount}
-                      </span>
-                    </div>
-                    <p className="showcase-room-meta">{lodging.room}</p>
-                    <div className="showcase-foot">
-                      <div className="showcase-price-stack">
-                        <div className="showcase-price-top">
-                          <span className="showcase-discount">{lodging.discountRate}</span>
-                          <span className="showcase-original-price">{lodging.originalPrice}</span>
-                        </div>
-                        <span className="showcase-price">{lodging.price}</span>
-                      </div>
-                    </div>
-                  </div>
-                </Link>
-              ))}
-            </div>
-          </section>
+          <HomeCollectionSection
+            key={collection.title}
+            collection={collection}
+            cards={buildCollectionCards(collection)}
+          />
         ))}
       </div>
     </div>

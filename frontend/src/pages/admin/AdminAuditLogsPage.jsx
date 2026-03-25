@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import DataTable from "../../components/common/DataTable";
-import { auditLogRows } from "../../data/siteData";
+import { auditLogRows } from "../../data/dashboardData";
 
 const columns = [
   { key: "actor", label: "작업자" },

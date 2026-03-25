@@ -36,11 +36,13 @@ import AdminEventsPage from "../pages/admin/AdminEventsPage";
 import AdminInquiriesPage from "../pages/admin/AdminInquiriesPage";
 import AdminReviewsPage from "../pages/admin/AdminReviewsPage";
 import AdminAuditLogsPage from "../pages/admin/AdminAuditLogsPage";
+import SubmissionHtmlRedirect from "./SubmissionHtmlRedirect";
 
 export default function AppRouter() {
   return (
     <BrowserRouter>
       <Routes>
+        <Route path="/submission-html/*" element={<SubmissionHtmlRedirect />} />
         <Route element={<AppShell />}>
           <Route path="/" element={<HomePage />} />
           <Route path="/docs" element={<DocsPage />} />

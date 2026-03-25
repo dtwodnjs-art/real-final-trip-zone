@@ -1,31 +1,17 @@
 import { Link } from "react-router-dom";
 import { useState } from "react";
 import MyPageLayout from "../../components/user/MyPageLayout";
-import { couponRows } from "../../data/siteData";
+import { couponRows } from "../../data/mypageData";
+import {
+  getCouponAmount,
+  getCouponSummary,
+  getCouponToneClass,
+  getCouponVisualClass,
+} from "../../features/mypage/mypageViewModels";
 
 export default function MyCouponsPage() {
   const [filter, setFilter] = useState("available");
-  const availableCount = couponRows.filter((item) => item.status === "사용 가능").length;
-  const expiringCount = couponRows.filter((item) => item.status === "만료 예정").length;
-  const usedCount = couponRows.filter((item) => item.status === "사용 완료").length;
-  const filteredCoupons = couponRows.filter((item) => {
-    if (filter === "available") return item.status === "사용 가능";
-    if (filter === "used") return item.status === "사용 완료";
-    if (filter === "expiring") return item.status === "만료 예정";
-    return false;
-  });
-  const getCouponAmount = (item) => item.name.match(/(\d[\d,]*%?원?)/)?.[1] ?? "혜택 확인";
-  const getCouponToneClass = (item) => {
-    if (item.status === "사용 가능") return "is-available";
-    if (item.status === "사용 완료") return "is-used";
-    return "is-expiring";
-  };
-  const getCouponVisualClass = (item) => {
-    if (item.target.includes("제주")) return "is-jeju";
-    if (item.target.includes("서울")) return "is-city";
-    if (item.target.includes("전")) return "is-pass";
-    return "is-stay";
-  };
+  const { expiringCount, filteredCoupons } = getCouponSummary(couponRows, filter);
 
   return (
     <MyPageLayout>

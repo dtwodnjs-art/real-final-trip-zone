@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { authProviders, defaultSignupForm } from "../../data/siteData";
+import { authProviders, defaultSignupForm } from "../../data/authData";
+import { getAuthProviderMark } from "../../features/auth/authViewModels";
 
 export default function SignupPage() {
   const navigate = useNavigate();
@@ -113,7 +114,7 @@ export default function SignupPage() {
                   onClick={() => navigate("/login")}
                 >
                   <span className="auth-provider-mark" aria-hidden="true">
-                    {provider.key === "KAKAO" ? "K" : provider.key === "NAVER" ? "N" : "G"}
+                    {getAuthProviderMark(provider.key)}
                   </span>
                   <strong>{provider.label}로 가입하기</strong>
                 </button>

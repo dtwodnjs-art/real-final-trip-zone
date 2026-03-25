@@ -1,12 +1,12 @@
 import { useNavigate } from "react-router-dom";
 import MyPageLayout from "../../components/user/MyPageLayout";
-import { myProfileDetails, myProfileSummary } from "../../data/siteData";
+import { myProfileDetails, myProfileSummary } from "../../data/mypageData";
+import { getProfileFieldGroups } from "../../features/mypage/mypageViewModels";
 import { clearAuthSession } from "../../utils/authSession";
 
 export default function MyProfilePage() {
   const navigate = useNavigate();
-  const accountInfoRows = myProfileDetails.filter((item) => ["이메일", "전화번호", "회원 등급"].includes(item.label));
-  const accountMetaRows = myProfileDetails.filter((item) => ["로그인 방식", "마케팅 수신", "최근 로그인"].includes(item.label));
+  const { accountInfoRows, accountMetaRows } = getProfileFieldGroups(myProfileDetails);
 
   const handleWithdraw = () => {
     const confirmed = window.confirm("회원 탈퇴를 진행하시겠습니까?");

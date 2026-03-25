@@ -1,21 +1,11 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import MyPageLayout from "../../components/user/MyPageLayout";
+import {
+  INQUIRY_STATUS_LABELS,
+  INQUIRY_TYPE_LABELS,
+} from "../../features/mypage/mypageViewModels";
 import { deleteMyInquiryThread, findMyInquiryThread } from "../../utils/myInquiryCenter";
-
-const STATUS_LABELS = {
-  OPEN: "접수",
-  ANSWERED: "답변 완료",
-  CLOSED: "종료",
-  BLOCKED: "차단",
-};
-
-const TYPE_LABELS = {
-  LODGING: "숙소 문의",
-  BOOKING: "예약 문의",
-  PAYMENT: "결제 문의",
-  SYSTEM: "시스템 문의",
-};
 
 export default function MyInquiryDetailPage() {
   const { inquiryId } = useParams();
@@ -55,11 +45,11 @@ export default function MyInquiryDetailPage() {
         <div className="support-center-strip support-center-strip--hero">
           <div className="support-center-item">
             <span>문의 유형</span>
-            <strong>{TYPE_LABELS[thread.type] ?? thread.type}</strong>
+            <strong>{INQUIRY_TYPE_LABELS[thread.type] ?? thread.type}</strong>
           </div>
           <div className="support-center-item">
             <span>상태</span>
-            <strong>{STATUS_LABELS[thread.status] ?? thread.status}</strong>
+            <strong>{INQUIRY_STATUS_LABELS[thread.status] ?? thread.status}</strong>
           </div>
           <div className="support-center-item">
             <span>예약번호</span>
@@ -69,7 +59,7 @@ export default function MyInquiryDetailPage() {
         <div className="inquiry-thread-head inquiry-thread-head-v2">
           <div className="inquiry-thread-copy">
             <strong>{thread.title}</strong>
-            <p>{TYPE_LABELS[thread.type] ?? thread.type} · {thread.lodging} · {thread.bookingNo}</p>
+            <p>{INQUIRY_TYPE_LABELS[thread.type] ?? thread.type} · {thread.lodging} · {thread.bookingNo}</p>
           </div>
           <span className="my-stat-pill is-soft">{thread.updatedAt}</span>
         </div>

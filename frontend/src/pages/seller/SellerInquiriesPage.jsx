@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { inquiryMessages, inquiryRooms } from "../../data/siteData";
+import { inquiryMessages, inquiryRooms } from "../../data/mypageData";
 
 const statusLabel = {
   OPEN: "접수",

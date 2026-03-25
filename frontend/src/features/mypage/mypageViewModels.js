@@ -1,0 +1,141 @@
+export const BOOKING_STATUS_LABELS = {
+  CONFIRMED: "확정",
+  PENDING: "대기",
+  COMPLETED: "숙박 완료",
+};
+
+export const INQUIRY_STATUS_LABELS = {
+  OPEN: "접수",
+  ANSWERED: "답변 완료",
+  CLOSED: "종료",
+  BLOCKED: "차단",
+};
+
+export const INQUIRY_TYPE_LABELS = {
+  LODGING: "숙소 문의",
+  BOOKING: "예약 문의",
+  PAYMENT: "결제 문의",
+  SYSTEM: "시스템 문의",
+};
+
+export const INQUIRY_TYPE_OPTIONS = [
+  { value: "LODGING", label: "숙소 문의", hint: "입실, 시설, 객실 상태" },
+  { value: "BOOKING", label: "예약 문의", hint: "일정 변경, 인원, 요청사항" },
+  { value: "PAYMENT", label: "결제 문의", hint: "결제 오류, 환불, 영수증" },
+  { value: "SYSTEM", label: "서비스 문의", hint: "로그인, 오류, 계정 문제" },
+];
+
+export const DEFAULT_INQUIRY_FORM = {
+  title: "",
+  type: "LODGING",
+  lodging: "",
+  bookingNo: "",
+  body: "",
+};
+
+export function makeBookingId(item) {
+  return `${item.lodgingId}-${item.stay.replace(/\./g, "").replace(/\s/g, "")}`;
+}
+
+export function getProfileFieldGroups(details) {
+  return {
+    accountInfoRows: details.filter((item) => ["이메일", "전화번호", "회원 등급"].includes(item.label)),
+    accountMetaRows: details.filter((item) => ["로그인 방식", "마케팅 수신", "최근 로그인"].includes(item.label)),
+  };
+}
+
+export function getBookingTabSummary(rows) {
+  const upcomingCount = rows.filter((item) => item.status !== "COMPLETED").length;
+  const completedCount = rows.filter((item) => item.status === "COMPLETED").length;
+  return { upcomingCount, completedCount };
+}
+
+export function filterBookingRows(rows, tab) {
+  return rows.filter((item) => {
+    if (tab === "upcoming") return item.status !== "COMPLETED";
+    if (tab === "completed") return item.status === "COMPLETED";
+    return true;
+  });
+}
+
+export function getCouponSummary(rows, filter) {
+  const availableCount = rows.filter((item) => item.status === "사용 가능").length;
+  const expiringCount = rows.filter((item) => item.status === "만료 예정").length;
+  const usedCount = rows.filter((item) => item.status === "사용 완료").length;
+  const filteredCoupons = rows.filter((item) => {
+    if (filter === "available") return item.status === "사용 가능";
+    if (filter === "used") return item.status === "사용 완료";
+    if (filter === "expiring") return item.status === "만료 예정";
+    return false;
+  });
+
+  return { availableCount, expiringCount, usedCount, filteredCoupons };
+}
+
+export function getCouponAmount(item) {
+  return item.name.match(/(\d[\d,]*%?원?)/)?.[1] ?? "혜택 확인";
+}
+
+export function getCouponToneClass(item) {
+  if (item.status === "사용 가능") return "is-available";
+  if (item.status === "사용 완료") return "is-used";
+  return "is-expiring";
+}
+
+export function getCouponVisualClass(item) {
+  if (item.target.includes("제주")) return "is-jeju";
+  if (item.target.includes("서울")) return "is-city";
+  if (item.target.includes("전")) return "is-pass";
+  return "is-stay";
+}
+
+export function getMileageSummary(rows, filter) {
+  const earnedThisMonth = rows
+    .filter((item) => item.type === "적립" && item.time.startsWith("2026.03"))
+    .reduce((sum, item) => sum + Number(item.amount.replace(/[+,]/g, "")), 0);
+  const usedThisMonth = rows
+    .filter((item) => item.type === "사용" && item.time.startsWith("2026.03"))
+    .reduce((sum, item) => sum + Number(item.amount.replace(/[-,]/g, "")), 0);
+  const filteredRows = rows.filter((item) => {
+    if (filter === "all") return true;
+    if (filter === "earn") return item.type === "적립";
+    if (filter === "use") return item.type === "사용";
+    return false;
+  });
+
+  return { earnedThisMonth, usedThisMonth, filteredRows };
+}
+
+export function getPaymentSummary(rows) {
+  return {
+    paidCount: rows.filter((item) => item.status === "PAID").length,
+    refundedCount: rows.filter((item) => item.status === "REFUNDED").length,
+    recentPaidAmount: rows.find((item) => item.status === "PAID")?.amount ?? "-",
+    recentRefundedAmount: rows.find((item) => item.status === "REFUNDED")?.amount ?? "-",
+  };
+}
+
+export function getInquiryCounts(rows) {
+  return {
+    answeredCount: rows.filter((item) => item.status === "ANSWERED").length,
+  };
+}
+
+export function buildInquiryCreateForm(initialType) {
+  return {
+    ...DEFAULT_INQUIRY_FORM,
+    type: INQUIRY_TYPE_OPTIONS.some((option) => option.value === initialType)
+      ? initialType
+      : DEFAULT_INQUIRY_FORM.type,
+  };
+}
+
+export function buildInquiryEditForm(thread) {
+  return {
+    title: thread.title,
+    type: thread.type,
+    lodging: thread.lodging,
+    bookingNo: thread.bookingNo,
+    body: thread.body,
+  };
+}

@@ -1,4 +1,4 @@
-import { docsPrinciples, quickLinks } from "../../data/siteData";
+import { docsPrinciples, quickLinks } from "../../data/homeData";
 
 export default function DocsPage() {
   return (

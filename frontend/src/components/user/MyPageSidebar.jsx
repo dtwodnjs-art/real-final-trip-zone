@@ -1,5 +1,5 @@
 import { NavLink } from "react-router-dom";
-import { myProfileSummary } from "../../data/siteData";
+import { myProfileSummary } from "../../data/mypageData";
 
 const ITEMS = [
   { to: "/my/bookings", label: "예약 내역" },

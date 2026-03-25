@@ -1,4 +1,4 @@
-import { roleData } from "../../data/siteData";
+import { roleData } from "../../data/homeData";
 
 export default function RolesPage() {
   return (

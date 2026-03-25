@@ -1,14 +1,10 @@
 import { Link } from "react-router-dom";
 import MyPageLayout from "../../components/user/MyPageLayout";
-import { myBookingRows, paymentHistoryRows } from "../../data/siteData";
-
-function makeBookingId(item) {
-  return `${item.lodgingId}-${item.stay.replace(/\./g, "").replace(/\s/g, "")}`;
-}
+import { myBookingRows, paymentHistoryRows } from "../../data/mypageData";
+import { getPaymentSummary, makeBookingId } from "../../features/mypage/mypageViewModels";
 
 export default function MyPaymentsPage() {
-  const paidCount = paymentHistoryRows.filter((item) => item.status === "PAID").length;
-  const refundedCount = paymentHistoryRows.filter((item) => item.status === "REFUNDED").length;
+  const { paidCount, refundedCount, recentPaidAmount, recentRefundedAmount } = getPaymentSummary(paymentHistoryRows);
 
   return (
     <MyPageLayout>
@@ -27,11 +23,11 @@ export default function MyPaymentsPage() {
         <div className="payment-glance-strip">
           <div className="payment-glance-card is-mint">
             <span>최근 결제</span>
-            <strong>{paymentHistoryRows.find((item) => item.status === "PAID")?.amount ?? "-"}</strong>
+            <strong>{recentPaidAmount}</strong>
           </div>
           <div className="payment-glance-card is-soft">
             <span>최근 환불</span>
-            <strong>{paymentHistoryRows.find((item) => item.status === "REFUNDED")?.amount ?? "-"}</strong>
+            <strong>{recentRefundedAmount}</strong>
           </div>
         </div>
         <div className="payment-row-list">

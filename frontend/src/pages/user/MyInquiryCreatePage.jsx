@@ -1,31 +1,17 @@
 import { useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import MyPageLayout from "../../components/user/MyPageLayout";
+import {
+  buildInquiryCreateForm,
+  INQUIRY_TYPE_OPTIONS,
+} from "../../features/mypage/mypageViewModels";
 import { createMyInquiryThread } from "../../utils/myInquiryCenter";
-
-const DEFAULT_FORM = {
-  title: "",
-  type: "LODGING",
-  lodging: "",
-  bookingNo: "",
-  body: "",
-};
-
-const TYPE_OPTIONS = [
-  { value: "LODGING", label: "숙소 문의", hint: "입실, 시설, 객실 상태" },
-  { value: "BOOKING", label: "예약 문의", hint: "일정 변경, 인원, 요청사항" },
-  { value: "PAYMENT", label: "결제 문의", hint: "결제 오류, 환불, 영수증" },
-  { value: "SYSTEM", label: "서비스 문의", hint: "로그인, 오류, 계정 문제" },
-];
 
 export default function MyInquiryCreatePage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const initialType = searchParams.get("type");
-  const [form, setForm] = useState({
-    ...DEFAULT_FORM,
-    type: TYPE_OPTIONS.some((option) => option.value === initialType) ? initialType : DEFAULT_FORM.type,
-  });
+  const [form, setForm] = useState(buildInquiryCreateForm(initialType));
 
   const handleChange = (key, value) => {
     setForm((current) => ({ ...current, [key]: value }));

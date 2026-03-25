@@ -130,7 +130,11 @@ npm run build
 - 구조 기준: `docs/tripzone-structure-spec-v2.md`
 - DB 기준: `docs/tripzone-ddl-v2.sql`
 - 프론트 라우트 기준: `frontend/src/router/AppRouter.jsx`
-- mock 데이터 기준: `frontend/src/data/siteData.js`
+- 홈/리스트 데이터 기준: `frontend/src/data/homeData.js`, `frontend/src/data/lodgingData.js`
+- 상세/예약 데이터 기준: `frontend/src/data/lodgingDetailData.js`, `frontend/src/data/bookingData.js`
+- 마이페이지 데이터 기준: `frontend/src/data/mypageData.js`
+- 대시보드/운영 데이터 기준: `frontend/src/data/dashboardData.js`, `frontend/src/data/opsData.js`
+- 화면용 데이터 가공 기준: `frontend/src/features/`
 
 ## Oracle DB 연결 가이드
 
@@ -173,10 +177,14 @@ npm run build
 
 ### 프론트에서 바로 API로 치환할 지점
 
-- 인증 세션 mock: `frontend/src/utils/authSession.js`
+- 인증 세션 mock: `frontend/src/features/auth/authSession.js`
 - 관리자/판매자 상태 변경 mock: `frontend/src/utils/mockStorage.js`
 - 문의센터 mock: `frontend/src/utils/myInquiryCenter.js`
-- 초기 화면 mock 데이터: `frontend/src/data/siteData.js`
+- 홈/이벤트 mock 데이터: `frontend/src/data/homeData.js`
+- 숙소/리스트 mock 데이터: `frontend/src/data/lodgingData.js`
+- 상세/예약 mock 데이터: `frontend/src/data/lodgingDetailData.js`, `frontend/src/data/bookingData.js`
+- 마이페이지 mock 데이터: `frontend/src/data/mypageData.js`
+- 대시보드 mock 데이터: `frontend/src/data/dashboardData.js`, `frontend/src/data/opsData.js`
 
 ### 백엔드 팀원 체크리스트
 

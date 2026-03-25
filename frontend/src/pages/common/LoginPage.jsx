@@ -1,25 +1,37 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { authProviders, defaultLoginForm } from "../../data/siteData";
-import { writeAuthSession } from "../../utils/authSession";
+import { authProviders, defaultLoginForm, demoLoginAccounts } from "../../data/authData";
+import {
+  createDefaultLocalSession,
+  createDemoAccountSession,
+  createSocialSession,
+  findDemoLoginAccount,
+  getAuthProviderMark,
+  getSelectedAuthProvider,
+  loginWithSessionPayload,
+} from "../../features/auth/authViewModels";
 
 export default function LoginPage() {
   const navigate = useNavigate();
   const [form, setForm] = useState(defaultLoginForm);
-  const selectedProvider = authProviders.find((provider) => provider.key === form.provider) ?? authProviders[0];
+  const selectedProvider = getSelectedAuthProvider(form.provider);
   const canSubmit = form.email.trim() && form.password.trim();
+
+  const commitSession = (payload) => {
+    navigate(loginWithSessionPayload(payload));
+  };
 
   const handleSubmit = (event) => {
     event.preventDefault();
     if (!canSubmit) return;
-    writeAuthSession({
-      name: form.email.split("@")[0] || "tripzone",
-      email: form.email,
-      provider: form.provider,
-      role: "ROLE_USER",
-      reviewEligibleLodgingIds: [1, 2, 3],
-    });
-    navigate("/");
+    const matchedDemoAccount = findDemoLoginAccount(form.email, form.password);
+
+    if (matchedDemoAccount) {
+      commitSession(createDemoAccountSession(matchedDemoAccount, form.provider));
+      return;
+    }
+
+    commitSession(createDefaultLocalSession(form));
   };
 
   return (
@@ -93,6 +105,33 @@ export default function LoginPage() {
             </div>
           </div>
 
+          <div className="auth-demo-box">
+            <div className="auth-demo-head">
+              <strong>시현 계정</strong>
+              <span>클릭하면 자동 입력</span>
+            </div>
+            <div className="auth-demo-list">
+              {demoLoginAccounts.map((account) => (
+                <button
+                  key={account.key}
+                  type="button"
+                  className="auth-demo-account"
+                  onClick={() =>
+                    setForm((current) => ({
+                      ...current,
+                      provider: "LOCAL",
+                      email: account.email,
+                      password: account.password,
+                    }))
+                  }
+                >
+                  <strong>{account.label}</strong>
+                  <span>{account.email}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+
           <button className={`primary-button booking-card-button${canSubmit ? "" : " is-disabled"}`} type="submit">
             로그인
           </button>
@@ -110,18 +149,11 @@ export default function LoginPage() {
                   type="button"
                   className={`auth-provider-line auth-provider-${provider.key.toLowerCase()}${selectedProvider.key === provider.key ? " is-active" : ""}`}
                   onClick={() => {
-                    writeAuthSession({
-                      name: `${provider.label} 회원`,
-                      email: `${provider.key.toLowerCase()}@tripzone.social`,
-                      provider: provider.key,
-                      role: "ROLE_USER",
-                      reviewEligibleLodgingIds: [1, 2, 3],
-                    });
-                    navigate("/");
+                    commitSession(createSocialSession(provider));
                   }}
                 >
                   <span className="auth-provider-mark" aria-hidden="true">
-                    {provider.key === "KAKAO" ? "K" : provider.key === "NAVER" ? "N" : "G"}
+                    {getAuthProviderMark(provider.key)}
                   </span>
                   <strong>{provider.label}로 계속하기</strong>
                 </button>

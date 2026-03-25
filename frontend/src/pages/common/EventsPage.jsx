@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
-import { bookingCouponOptions, eventBanners, promoBanners } from "../../data/siteData";
+import { bookingCouponOptions } from "../../data/bookingData";
+import { eventBanners, promoBanners } from "../../data/homeData";
 
 export default function EventsPage() {
   return (

@@ -35,6 +35,7 @@
           <p>프론트 화면이 실제 API에서 기대하는 응답 형태를 정리한 문서다.</p>
           <nav class="sidebar-nav">
             <a class="active" href="#purpose">문서 목적</a>
+            <a href="#structure">현재 구조</a>
             <a href="#contract">공통 계약</a>
             <a href="#bookings">내 예약</a>
             <a href="#coupons">쿠폰</a>
@@ -70,6 +71,52 @@
           </p>
           <div class="notice">
             엔티티를 그대로 노출하기보다 화면 단위 응답을 내려주는 쪽이 안전하다.
+          </div>
+        </section>
+
+        <section class="content-block" id="structure">
+          <p class="eyebrow">Structure</p>
+          <h2>현재 프론트 구조</h2>
+          <div class="doc-meta-strip">
+            <span>pages</span>
+            <span>features</span>
+            <span>data</span>
+            <span>viewModel 우선</span>
+          </div>
+          <div class="card-grid">
+            <div class="list-card">
+              <h3>구조 기준</h3>
+              <ul>
+                <li><span class="code-chip">pages/</span> 라우트 진입과 화면 조립</li>
+                <li><span class="code-chip">features/</span> UI 블록, viewModel, 유틸</li>
+                <li><span class="code-chip">data/</span> mock 데이터와 shape 기준</li>
+                <li><span class="code-chip">siteData.js</span>는 더 이상 메인 연결 지점이 아님</li>
+              </ul>
+            </div>
+            <div class="list-card">
+              <h3>연결 순서</h3>
+              <ul>
+                <li><span class="code-chip">1</span> data 파일의 shape를 API 응답과 맞춘다.</li>
+                <li><span class="code-chip">2</span> viewModel에서 화면용 데이터로 가공한다.</li>
+                <li><span class="code-chip">3</span> page는 가능하면 수정하지 않는다.</li>
+              </ul>
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr><th>도메인</th><th>page</th><th>연결 지점</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>홈</td><td>pages/common/HomePage.jsx</td><td>features/home/, data/homeData.js</td></tr>
+                <tr><td>숙소 리스트</td><td>pages/user/LodgingListPage.jsx</td><td>features/lodging-list/, data/lodgingData.js</td></tr>
+                <tr><td>숙소 상세</td><td>pages/user/LodgingDetailPage.jsx</td><td>features/lodging-detail/, data/lodgingDetailData.js</td></tr>
+                <tr><td>예약/결제</td><td>pages/user/BookingPage.jsx</td><td>features/booking/, data/bookingData.js</td></tr>
+                <tr><td>마이페이지</td><td>pages/user/My*.jsx</td><td>features/mypage/mypageViewModels.js, data/mypageData.js</td></tr>
+                <tr><td>대시보드</td><td>pages/admin, pages/seller</td><td>features/dashboard/, data/dashboardData.js, data/opsData.js</td></tr>
+                <tr><td>인증</td><td>pages/common/LoginPage.jsx</td><td>features/auth/, data/authData.js</td></tr>
+              </tbody>
+            </table>
           </div>
         </section>
 
@@ -197,6 +244,9 @@
             <div class="timeline-item"><div class="timeline-step">02</div><div><strong>쿠폰 / 마일리지</strong><p>count, balance, 상태 라벨이 화면 밀도에 큰 영향을 준다.</p></div></div>
             <div class="timeline-item"><div class="timeline-step">03</div><div><strong>결제 내역</strong><p>결제수단, 금액, 환불 상태까지 같이 내려와야 한다.</p></div></div>
             <div class="timeline-item"><div class="timeline-step">04</div><div><strong>문의센터</strong><p>문의방 정보와 최근 메시지 preview가 같이 필요하다.</p></div></div>
+          </div>
+          <div class="notice">
+            실제 파일 연결은 `mypageData.js`, `mypageViewModels.js`, `bookingData.js`, `bookingViewModel.js` 순서로 보는 것이 가장 빠르다.
           </div>
         </section>
 

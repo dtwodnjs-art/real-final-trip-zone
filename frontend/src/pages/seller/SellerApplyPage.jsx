@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { sellerApplicationStatus, sellerApplicationSteps } from "../../data/siteData";
+import { sellerApplicationStatus, sellerApplicationSteps } from "../../data/opsData";
 
 export default function SellerApplyPage() {
   const [status, setStatus] = useState("PENDING");

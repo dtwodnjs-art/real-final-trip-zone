@@ -1,4 +1,4 @@
-import { myInquiryThreadsSeed } from "../data/siteData";
+import { myInquiryThreadsSeed } from "../data/mypageData";
 
 const INQUIRY_CENTER_KEY = "tripzone-my-inquiry-center";
 

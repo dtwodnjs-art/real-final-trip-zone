@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import MyPageLayout from "../../components/user/MyPageLayout";
-import { lodgings, wishlistRows } from "../../data/siteData";
+import { lodgings } from "../../data/lodgingData";
+import { wishlistRows } from "../../data/mypageData";
 
 const lodgingMap = Object.fromEntries(lodgings.map((lodging) => [lodging.id, lodging]));
 

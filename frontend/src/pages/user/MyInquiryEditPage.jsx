@@ -1,14 +1,11 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import MyPageLayout from "../../components/user/MyPageLayout";
+import {
+  buildInquiryEditForm,
+  INQUIRY_TYPE_OPTIONS,
+} from "../../features/mypage/mypageViewModels";
 import { findMyInquiryThread, updateMyInquiryThread } from "../../utils/myInquiryCenter";
-
-const TYPE_OPTIONS = [
-  { value: "LODGING", label: "숙소 문의", hint: "입실, 시설, 객실 상태" },
-  { value: "BOOKING", label: "예약 문의", hint: "일정 변경, 인원, 요청사항" },
-  { value: "PAYMENT", label: "결제 문의", hint: "결제 오류, 환불, 영수증" },
-  { value: "SYSTEM", label: "서비스 문의", hint: "로그인, 오류, 계정 문제" },
-];
 
 export default function MyInquiryEditPage() {
   const { inquiryId } = useParams();
@@ -18,13 +15,7 @@ export default function MyInquiryEditPage() {
   useEffect(() => {
     const thread = findMyInquiryThread(inquiryId);
     if (!thread) return;
-    setForm({
-      title: thread.title,
-      type: thread.type,
-      lodging: thread.lodging,
-      bookingNo: thread.bookingNo,
-      body: thread.body,
-    });
+    setForm(buildInquiryEditForm(thread));
   }, [inquiryId]);
 
   if (!form) {

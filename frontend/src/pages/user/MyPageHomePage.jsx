@@ -7,7 +7,7 @@ import {
   myProfileSummary,
   paymentHistoryRows,
   wishlistRows,
-} from "../../data/siteData";
+} from "../../data/mypageData";
 
 export default function MyPageHomePage() {
   const upcomingCount = myBookingRows.filter((item) => item.status !== "COMPLETED").length;

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import DataTable from "../../components/common/DataTable";
-import { reservationRows } from "../../data/siteData";
+import { reservationRows } from "../../data/dashboardData";
 import { readMockRows, writeMockRows } from "../../utils/mockStorage";
 
 const columns = [

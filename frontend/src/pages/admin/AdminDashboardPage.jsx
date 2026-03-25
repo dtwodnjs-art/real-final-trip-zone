@@ -1,41 +1,55 @@
-import { adminMetrics, adminTasks } from "../../data/siteData";
-import { Link } from "react-router-dom";
+import {
+  DashboardChecklist,
+  DashboardFactGrid,
+  DashboardHeader,
+  DashboardLogList,
+  DashboardMetricBar,
+  DashboardPriorityTable,
+  DashboardSectionHead,
+  DashboardTrendList,
+  DashboardWatchList,
+} from "../../features/dashboard/DashboardUI";
+import { getAdminDashboardViewModel } from "../../features/dashboard/dashboardViewModels";
 
 export default function AdminDashboardPage() {
+  const vm = getAdminDashboardViewModel();
+
   return (
     <div className="container page-stack">
-      <section className="ops-hero">
-        <div>
-          <p className="eyebrow">관리자센터</p>
-          <h1>판매자 승인, 회원 상태, 문의 운영 현황</h1>
-          <p>승인 대기 판매자와 미처리 운영 이슈를 우선 확인하고 바로 처리합니다.</p>
-        </div>
-      </section>
+      <section className="dashboard-workspace admin-workspace">
+        <DashboardHeader {...vm.header} ariaLabel="관리 메뉴" />
+        <DashboardMetricBar items={vm.metrics} label="운영 요약" />
 
-      <section className="ops-board">
-        <div className="summary-grid">
-          {adminMetrics.map((item) => (
-            <div key={item.label} className={`summary-card tone-${item.tone}`}>
-              <span>{item.label}</span>
-              <strong>{item.value}</strong>
-              <p>{item.meta}</p>
-            </div>
-          ))}
-        </div>
-        <div className="ops-worklist">
-          {adminTasks.map((task) => (
-            <div key={task} className="ops-work-item">
-              {task}
-            </div>
-          ))}
-        </div>
-        <div className="hero-actions">
-          <Link className="primary-button" to="/admin/users">회원 관리</Link>
-          <Link className="secondary-button" to="/admin/sellers">판매자 관리</Link>
-          <Link className="secondary-button" to="/admin/events">이벤트 · 쿠폰</Link>
-          <Link className="secondary-button" to="/admin/inquiries">문의 모니터링</Link>
-          <Link className="secondary-button" to="/admin/reviews">리뷰 운영</Link>
-          <Link className="secondary-button" to="/admin/audit-logs">운영 로그</Link>
+        <div className="dashboard-workgrid">
+          <main className="dashboard-mainpane">
+            <section className="dashboard-sheet">
+              <DashboardSectionHead eyebrow="우선 처리" title="승인 대기 판매자와 운영 이슈" action={{ label: "전체 보기", to: "/admin/sellers" }} />
+              <DashboardPriorityTable rows={vm.watchRows} />
+            </section>
+
+            <section className="dashboard-sheet">
+              <DashboardSectionHead eyebrow="최근 조치" title="관리 로그" action={{ label: "로그 보기", to: "/admin/audit-logs" }} />
+              <DashboardLogList rows={vm.logs} />
+            </section>
+
+            <section className="dashboard-sheet">
+              <DashboardSectionHead eyebrow="운영 추이" title="월별 예약과 매출 흐름" />
+              <DashboardTrendList rows={vm.trends} />
+            </section>
+          </main>
+
+          <aside className="dashboard-sidepane">
+            <section className="dashboard-sideblock">
+              <DashboardSectionHead eyebrow="즉시 확인" title="주의 회원" action={{ label: "회원 관리", to: "/admin/users" }} />
+              <DashboardWatchList rows={vm.attentionUsers} />
+              <DashboardFactGrid items={vm.facts} />
+            </section>
+
+            <section className="dashboard-sideblock">
+              <DashboardSectionHead eyebrow="오늘 점검" title="체크리스트" />
+              <DashboardChecklist items={vm.checklist} />
+            </section>
+          </aside>
         </div>
       </section>
     </div>

@@ -1,26 +1,21 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import MyPageLayout from "../../components/user/MyPageLayout";
-import { lodgings, myBookingRows } from "../../data/siteData";
-
-const STATUS_LABELS = {
-  CONFIRMED: "확정",
-  PENDING: "대기",
-  COMPLETED: "숙박 완료",
-};
+import { lodgings } from "../../data/lodgingData";
+import { myBookingRows } from "../../data/mypageData";
+import {
+  BOOKING_STATUS_LABELS,
+  filterBookingRows,
+  getBookingTabSummary,
+  makeBookingId,
+} from "../../features/mypage/mypageViewModels";
 
 const lodgingMap = Object.fromEntries(lodgings.map((lodging) => [lodging.id, lodging]));
 
 export default function MyBookingsPage() {
   const [tab, setTab] = useState("upcoming");
-  const upcomingCount = myBookingRows.filter((item) => item.status !== "COMPLETED").length;
-  const completedCount = myBookingRows.filter((item) => item.status === "COMPLETED").length;
-
-  const filteredRows = myBookingRows.filter((item) => {
-    if (tab === "upcoming") return item.status !== "COMPLETED";
-    if (tab === "completed") return item.status === "COMPLETED";
-    return true;
-  });
+  const { upcomingCount, completedCount } = getBookingTabSummary(myBookingRows);
+  const filteredRows = filterBookingRows(myBookingRows, tab);
 
   return (
     <MyPageLayout>
@@ -86,13 +81,13 @@ export default function MyBookingsPage() {
               <div className="booking-list-side">
                 <div className="booking-list-side-topline">
                   <span className={`table-code code-${item.status.toLowerCase()}`}>
-                    {STATUS_LABELS[item.status]}
+                    {BOOKING_STATUS_LABELS[item.status]}
                   </span>
-                  <span>{`${item.lodgingId}-${item.stay.replace(/\./g, "").replace(/\s/g, "")}`}</span>
+                  <span>{makeBookingId(item)}</span>
                 </div>
                 <strong className="booking-list-amount">{item.price}</strong>
                 <div className="booking-list-links">
-                  <Link className="coupon-action-button booking-action-button" to={`/my/bookings/${item.lodgingId}-${item.stay.replace(/\./g, "").replace(/\s/g, "")}`}>
+                  <Link className="coupon-action-button booking-action-button" to={`/my/bookings/${makeBookingId(item)}`}>
                     예약 상세
                   </Link>
                   {tab === "completed" ? (

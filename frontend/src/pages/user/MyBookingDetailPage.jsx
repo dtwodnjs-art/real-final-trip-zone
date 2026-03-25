@@ -1,6 +1,7 @@
 import { Link, useParams } from "react-router-dom";
 import MyPageLayout from "../../components/user/MyPageLayout";
-import { lodgings, myBookingRows, paymentHistoryRows } from "../../data/siteData";
+import { lodgings } from "../../data/lodgingData";
+import { myBookingRows, paymentHistoryRows } from "../../data/mypageData";
 
 const STATUS_LABELS = {
   CONFIRMED: "확정",
