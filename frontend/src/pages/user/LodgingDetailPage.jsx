@@ -13,6 +13,11 @@ import {
 import { buildGalleryImages, getRoomMeta } from "../../features/lodging-detail/lodgingDetailUtils";
 import { getLodgingReviews, getLodgings } from "../../services/lodgingService";
 import { getMyBookings } from "../../services/mypageService";
+import {
+  getSellerInquiryMessages,
+  getSellerInquiryRooms,
+  sendGuestInquiryMessage,
+} from "../../services/sellerInquiryService";
 
 const sellerContactByLodging = {
   1: {
@@ -88,7 +93,7 @@ export default function LodgingDetailPage() {
   const [reviewDraft, setReviewDraft] = useState({ score: 5, body: "", images: [] });
   const [reviews, setReviews] = useState(lodgingReviews);
   const sellerContact = sellerContactByLodging[lodging.id] ?? sellerContactByLodging[1];
-  const [chatMessages, setChatMessages] = useState(sellerContact.messages);
+  const [chatMessages, setChatMessages] = useState([]);
   const reviewAverage = useMemo(() => getReviewAverage(reviews), [reviews]);
   const reviewSectionRef = useRef(null);
   const inquiryThreadRef = useRef(null);
@@ -98,6 +103,11 @@ export default function LodgingDetailPage() {
     () => canWriteLodgingReview(authSession, myBookingRows, lodging.id),
     [authSession, lodging.id, myBookingRows],
   );
+
+  const getChatBubbleTone = (sender) => {
+    if (sender === "회원" || sender === "guest") return "guest";
+    return "seller";
+  };
 
   useEffect(() => {
     if (location.hash !== "#reviews") return;
@@ -109,8 +119,13 @@ export default function LodgingDetailPage() {
   }, [location.hash]);
 
   useEffect(() => {
+    const matchedRoom = getSellerInquiryRooms().find((room) => Number(room.lodgingId) === Number(lodging.id));
+    if (matchedRoom) {
+      setChatMessages(getSellerInquiryMessages(matchedRoom.id));
+      return;
+    }
     setChatMessages(sellerContact.messages);
-  }, [sellerContact]);
+  }, [lodging.id, sellerContact]);
 
   useEffect(() => {
     if (!isInquiryOpen) return undefined;
@@ -175,11 +190,16 @@ export default function LodgingDetailPage() {
     const body = chatDraft.trim();
     if (!body) return;
 
-    setChatMessages((current) => [
-      ...current,
-      { id: `guest-${Date.now()}`, sender: "guest", time: "방금 전", body },
-      { id: `seller-${Date.now() + 1}`, sender: "seller", time: "곧 답변 예정", body: "문의 남겨주셔서 감사합니다. 운영팀이 확인 후 이 채팅창으로 바로 답변드릴게요." },
-    ]);
+    const result = sendGuestInquiryMessage({
+      lodgingId: lodging.id,
+      lodging: lodging.name,
+      bookingNo: myBookingRows.find((row) => Number(row.lodgingId) === Number(lodging.id))?.bookingId ?? "예약 미연결",
+      title: `${lodging.name} 숙소 문의`,
+      type: "LODGING",
+      body,
+    });
+
+    setChatMessages(result.messages);
     setChatDraft("");
   };
 
@@ -370,7 +390,7 @@ export default function LodgingDetailPage() {
 
             <div className="lodging-inquiry-thread" ref={inquiryThreadRef}>
               {chatMessages.map((message) => (
-                <article key={message.id} className={`lodging-chat-bubble is-${message.sender}`}>
+                <article key={message.id} className={`lodging-chat-bubble is-${getChatBubbleTone(message.sender)}`}>
                   <span className="lodging-chat-time">{message.time}</span>
                   <p>{message.body}</p>
                 </article>
@@ -385,7 +405,7 @@ export default function LodgingDetailPage() {
                 rows={3}
               />
               <div className="lodging-inquiry-form-foot">
-                <span>응답은 이 팝업 안에서 이어집니다.</span>
+                <span>회원 메시지는 판매자 대시보드 문의관리와 같은 흐름으로 이어집니다.</span>
                 <button type="submit" className="primary-button">
                   보내기
                 </button>

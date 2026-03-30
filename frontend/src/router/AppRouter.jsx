@@ -31,6 +31,7 @@ import SellerRoomsPage from "../pages/seller/SellerRoomsPage";
 import SellerAssetsPage from "../pages/seller/SellerAssetsPage";
 import SellerReservationsPage from "../pages/seller/SellerReservationsPage";
 import SellerInquiriesPage from "../pages/seller/SellerInquiriesPage";
+import SellerApplyPage from "../pages/seller/SellerApplyPage";
 import AdminDashboardPage from "../pages/admin/AdminDashboardPage";
 import AdminUsersPage from "../pages/admin/AdminUsersPage";
 import AdminSellersPage from "../pages/admin/AdminSellersPage";
@@ -73,7 +74,7 @@ export default function AppRouter() {
           <Route path="/my/membership" element={<MyMembershipPage />} />
           <Route path="/my/seller-apply" element={<MySellerApplyPage />} />
           <Route path="/seller" element={<SellerDashboardPage />} />
-          <Route path="/seller/apply" element={<Navigate to="/my/seller-apply" replace />} />
+          <Route path="/seller/apply" element={<SellerApplyPage />} />
           <Route path="/seller/lodgings" element={<SellerLodgingsPage />} />
           <Route path="/seller/rooms" element={<SellerRoomsPage />} />
           <Route path="/seller/assets" element={<SellerAssetsPage />} />

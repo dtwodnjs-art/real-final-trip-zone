@@ -83,6 +83,7 @@ export function getHeaderRoleLinks(session) {
       { to: "/seller/rooms", label: "객실 관리" },
       { to: "/seller/reservations", label: "예약 관리" },
       { to: "/seller/inquiries", label: "문의 관리" },
+      { to: "/seller/apply", label: "호스트 신청" },
     ];
   }
 

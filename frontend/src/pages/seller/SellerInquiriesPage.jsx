@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import DashboardLayout from "../../components/layout/DashboardLayout";
-import { getSellerInquiryMessages, getSellerInquiryRooms } from "../../services/dashboardService";
+import { getSellerInquiryMessages, getSellerInquiryRooms } from "../../services/sellerInquiryService";
+import { sendSellerInquiryReply } from "../../services/sellerInquiryService";
 
 const statusLabel = {
   OPEN: "접수",
@@ -19,12 +20,21 @@ const typeLabel = {
 export default function SellerInquiriesPage() {
   const inquiryRooms = getSellerInquiryRooms();
   const [selectedRoomId, setSelectedRoomId] = useState(inquiryRooms[0]?.id ?? null);
+  const [draft, setDraft] = useState("");
 
   const selectedRoom = useMemo(
     () => inquiryRooms.find((room) => room.id === selectedRoomId) ?? inquiryRooms[0],
     [selectedRoomId]
   );
   const messages = getSellerInquiryMessages(selectedRoom?.id);
+
+  const handleSubmit = (event) => {
+    event.preventDefault();
+    const body = draft.trim();
+    if (!body || !selectedRoom?.id) return;
+    sendSellerInquiryReply(selectedRoom.id, body);
+    setDraft("");
+  };
 
   return (
     <DashboardLayout role="seller">
@@ -94,6 +104,20 @@ export default function SellerInquiriesPage() {
               </article>
             ))}
           </div>
+          <form className="lodging-inquiry-form" onSubmit={handleSubmit}>
+            <textarea
+              value={draft}
+              onChange={(event) => setDraft(event.target.value)}
+              placeholder="회원 문의에 바로 답변을 남기세요."
+              rows={3}
+            />
+            <div className="lodging-inquiry-form-foot">
+              <span>판매자 답변은 회원 숙소문의 창과 같은 흐름으로 이어집니다.</span>
+              <button type="submit" className="primary-button">
+                답변 보내기
+              </button>
+            </div>
+          </form>
         </section>
       </section>
     </DashboardLayout>

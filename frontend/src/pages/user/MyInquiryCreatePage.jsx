@@ -28,12 +28,12 @@ export default function MyInquiryCreatePage() {
       <form className="inquiry-form-sheet inquiry-form-sheet-v2" onSubmit={handleSubmit}>
         <div className="mypage-header-row">
           <div className="mypage-header-copy">
-            <strong>문의 등록</strong>
-            <p>문의 유형과 예약 정보를 남기면 문의센터 목록으로 돌아갑니다.</p>
+            <strong>관리자 문의 등록</strong>
+            <p>운영팀이 확인할 이슈를 정리해서 남기면 상세 문의 내역으로 연결됩니다.</p>
           </div>
         </div>
         <div className="mypage-guide-banner">
-          <span>예약번호를 같이 남기면 답변이 더 빨라집니다.</span>
+          <span>숙소 문의는 상세 페이지의 숙소문의에서 판매자와 바로 대화합니다.</span>
         </div>
         <div className="inquiry-form-grid">
           <label className="field-block inquiry-field-full">

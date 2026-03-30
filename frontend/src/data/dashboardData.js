@@ -57,9 +57,51 @@ export const sellerRows = [
 ];
 
 export const adminInquiryRows = [
-  { title: "해운대 오션 스테이 체크인 시간 문의", type: "BOOKING", status: "OPEN", owner: "김민수", target: "해운대 오션 스테이" },
-  { title: "제주 포레스트 하우스 결제 영수증 요청", type: "PAYMENT", status: "ANSWERED", owner: "박서윤", target: "제주 포레스트 하우스" },
-  { title: "서울 시티 모먼트 시설 점검 문의", type: "SYSTEM", status: "CLOSED", owner: "정하늘", target: "서울 시티 모먼트" },
+  {
+    id: 801,
+    title: "결제 영수증 재발급 요청",
+    type: "PAYMENT",
+    status: "OPEN",
+    owner: "김민수",
+    target: "해운대 오션 스테이",
+    date: "오늘 10:42",
+    summary: "회사 제출용 결제 영수증 재발급 요청",
+    detail: "회원이 3월 결제 영수증 PDF 재발송을 요청했습니다. 결제 승인 정보와 발송 이력을 함께 확인해야 합니다.",
+    messages: [
+      { id: 1, sender: "회원", time: "오늘 10:42", body: "3월 결제 영수증을 회사 제출용으로 다시 받고 싶습니다." },
+    ],
+  },
+  {
+    id: 802,
+    title: "예약 취소 수수료 기준 확인",
+    type: "BOOKING",
+    status: "ANSWERED",
+    owner: "박서윤",
+    target: "제주 포레스트 하우스",
+    date: "어제 18:10",
+    summary: "체크인 3일 전 취소 수수료 문의",
+    detail: "회원이 체크인 3일 전 취소 시 차감 금액과 무료 취소 마감 시점을 상세히 문의했습니다.",
+    messages: [
+      { id: 1, sender: "회원", time: "어제 18:10", body: "체크인 3일 전 취소 시 수수료가 어떻게 적용되는지 확인하고 싶습니다." },
+      { id: 2, sender: "관리자", time: "어제 18:32", body: "예약 건 기준 무료 취소는 체크인 5일 전까지이며, 이후 취소 시 1박 요금이 차감됩니다." },
+    ],
+  },
+  {
+    id: 803,
+    title: "계정 인증 메일 재발송 요청",
+    type: "SYSTEM",
+    status: "CLOSED",
+    owner: "정하늘",
+    target: "TripZone 계정",
+    date: "03.21 09:04",
+    summary: "인증 메일 미수신 문의",
+    detail: "회원가입 후 인증 메일이 도착하지 않아 재발송과 계정 활성화 확인을 요청한 건입니다.",
+    messages: [
+      { id: 1, sender: "회원", time: "03.20 21:16", body: "회원가입 인증 메일이 도착하지 않아 재발송을 요청합니다." },
+      { id: 2, sender: "관리자", time: "03.20 21:28", body: "인증 메일을 다시 발송했고 스팸함 확인도 함께 안내했습니다." },
+      { id: 3, sender: "관리자", time: "03.21 09:04", body: "정상 인증 완료가 확인되어 문의를 종료 처리했습니다." },
+    ],
+  },
 ];
 
 export const auditLogRows = [

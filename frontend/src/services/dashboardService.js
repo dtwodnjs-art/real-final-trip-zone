@@ -19,7 +19,7 @@ import {
   sellerImageRows,
   sellerRoomRows,
 } from "../data/opsData";
-import { inquiryMessages, inquiryRooms } from "../data/mypageData";
+import { getSellerInquiryMessages, getSellerInquiryRooms } from "./sellerInquiryService";
 
 const COLLECTION_KEYS = {
   adminUsers: "tripzone-admin-users",
@@ -88,11 +88,11 @@ export function getAdminInquiries() {
   return readCollection(COLLECTION_KEYS.adminInquiries, adminInquiryRows);
 }
 
-export function updateAdminInquiryStatus(title, nextStatus) {
+export function updateAdminInquiryStatus(id, nextStatus) {
   return updateCollectionRow(
     COLLECTION_KEYS.adminInquiries,
     adminInquiryRows,
-    (row) => row.title === title,
+    (row) => row.id === id,
     { status: nextStatus },
   );
 }
@@ -194,14 +194,6 @@ export function submitSellerApplication(form) {
   return nextRow;
 }
 
-export function getSellerInquiryRooms() {
-  return inquiryRooms;
-}
-
-export function getSellerInquiryMessages(roomId) {
-  return inquiryMessages[roomId] ?? [];
-}
-
 export function getSellerMetrics() {
   return sellerMetrics;
 }
@@ -222,5 +214,6 @@ export function getSellerDashboardSnapshot() {
     metrics: getSellerMetrics(),
     lodgings: getSellerLodgings(),
     reservations: getSellerReservations(),
+    inquiries: getSellerInquiryRooms(),
   };
 }

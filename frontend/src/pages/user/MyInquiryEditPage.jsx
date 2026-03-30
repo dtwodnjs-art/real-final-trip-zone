@@ -45,8 +45,8 @@ export default function MyInquiryEditPage() {
       <form className="inquiry-form-sheet inquiry-form-sheet-v2" onSubmit={handleSubmit}>
         <div className="mypage-header-row">
           <div className="mypage-header-copy">
-            <strong>문의 수정</strong>
-            <p>기존 문의 내용을 정리한 뒤 다시 상세 화면으로 돌아갑니다.</p>
+            <strong>관리자 문의 수정</strong>
+            <p>운영팀이 확인할 제목과 내용을 다시 정리합니다.</p>
           </div>
         </div>
         <div className="mypage-guide-banner">

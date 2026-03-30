@@ -12,22 +12,20 @@ export const INQUIRY_STATUS_LABELS = {
 };
 
 export const INQUIRY_TYPE_LABELS = {
-  LODGING: "숙소 문의",
   BOOKING: "예약 문의",
   PAYMENT: "결제 문의",
-  SYSTEM: "시스템 문의",
+  SYSTEM: "서비스 문의",
 };
 
 export const INQUIRY_TYPE_OPTIONS = [
-  { value: "LODGING", label: "숙소 문의", hint: "입실, 시설, 객실 상태" },
-  { value: "BOOKING", label: "예약 문의", hint: "일정 변경, 인원, 요청사항" },
+  { value: "BOOKING", label: "예약 문의", hint: "취소 규정, 일정 변경, 예약 오류" },
   { value: "PAYMENT", label: "결제 문의", hint: "결제 오류, 환불, 영수증" },
-  { value: "SYSTEM", label: "서비스 문의", hint: "로그인, 오류, 계정 문제" },
+  { value: "SYSTEM", label: "서비스 문의", hint: "로그인, 인증, 계정 문제" },
 ];
 
 export const DEFAULT_INQUIRY_FORM = {
   title: "",
-  type: "LODGING",
+  type: "BOOKING",
   lodging: "",
   bookingNo: "",
   body: "",

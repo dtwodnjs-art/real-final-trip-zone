@@ -38,8 +38,8 @@ export default function MyInquiryDetailPage() {
       <section className="my-detail-sheet inquiry-thread-panel inquiry-thread-panel-v2">
         <div className="mypage-header-row">
           <div className="mypage-header-copy">
-            <strong>문의 상세</strong>
-            <p>문의 상태와 대화 흐름을 시간순으로 확인합니다.</p>
+            <strong>관리자 문의 상세</strong>
+            <p>운영팀 답변과 처리 상태를 시간순으로 확인합니다.</p>
           </div>
         </div>
         <div className="support-center-strip support-center-strip--hero">

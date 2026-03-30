@@ -38,11 +38,25 @@ export default function Header() {
   const handleMembershipClick = (event) => {
     event.stopPropagation();
     setMenuOpen(false);
+    if (session?.role === "ROLE_ADMIN") {
+      navigate("/admin");
+      return;
+    }
+    if (session?.role === "ROLE_HOST") {
+      navigate("/seller");
+      return;
+    }
     navigate("/my/membership");
   };
 
   const membershipLabel = session?.role === "ROLE_USER" ? myProfileSummary.grade : getMembershipLabel(session);
   const profileLabel = session?.role === "ROLE_USER" ? myProfileSummary.name : session?.name;
+  const profileMetaLabel =
+    session?.role === "ROLE_ADMIN"
+      ? "관리자 대시보드"
+      : session?.role === "ROLE_HOST"
+        ? "판매자 대시보드"
+        : `${membershipLabel} 회원`;
   const roleLinks = getHeaderRoleLinks(session);
   const availableCouponCount = session?.role === "ROLE_USER" ? getMyCoupons().filter((item) => item.status === "사용 가능").length : 0;
   const upcomingBookingCount = session?.role === "ROLE_USER" ? myBookingRows.filter((item) => item.status !== "COMPLETED").length : 0;
@@ -83,7 +97,7 @@ export default function Header() {
                       }
                     }}
                   >
-                    {membershipLabel} 회원
+                    {profileMetaLabel}
                   </span>
                 </span>
                 <span className="header-profile-toggle" aria-hidden="true">☰</span>

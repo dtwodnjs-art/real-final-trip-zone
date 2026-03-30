@@ -301,10 +301,11 @@ export const paymentHistoryRows = [
   },
 ];
 
-export const inquiryRooms = [
+export const sellerInquiryRoomsSeed = [
   {
     id: 301,
     title: "체크인 시간 문의",
+    lodgingId: 1,
     type: "LODGING",
     status: "OPEN",
     actor: "회원",
@@ -316,6 +317,7 @@ export const inquiryRooms = [
   {
     id: 302,
     title: "예약 변경 요청",
+    lodgingId: 2,
     type: "BOOKING",
     status: "ANSWERED",
     actor: "회원",
@@ -326,18 +328,19 @@ export const inquiryRooms = [
   },
   {
     id: 303,
-    title: "결제 취소 문의",
-    type: "PAYMENT",
-    status: "CLOSED",
+    title: "수영장 운영 시간 문의",
+    lodgingId: 3,
+    type: "LODGING",
+    status: "OPEN",
     actor: "회원",
     lodging: "강릉 코스트 라운지",
     bookingNo: "B-24029",
     updatedAt: "03.20 11:10",
-    preview: "카드 취소와 환불 예정 시각을 안내했습니다.",
+    preview: "야간 수영장 운영 시간과 이용 가능 연령을 문의했습니다.",
   },
 ];
 
-export const inquiryMessages = {
+export const sellerInquiryMessagesSeed = {
   301: [
     { id: 1, sender: "회원", time: "오늘 14:10", body: "체크인 시간을 1시간 정도 앞당길 수 있는지 문의드립니다." },
     { id: 2, sender: "판매자", time: "오늘 14:24", body: "당일 객실 상황 확인 후 16시 이전 다시 안내드리겠습니다." },
@@ -347,21 +350,58 @@ export const inquiryMessages = {
     { id: 2, sender: "판매자", time: "어제 18:40", body: "연장 가능한 객실로 확인되어 추가 결제 후 변경 가능합니다." },
   ],
   303: [
-    { id: 1, sender: "회원", time: "03.20 09:55", body: "결제 취소 처리되었는지 확인 부탁드립니다." },
-    { id: 2, sender: "관리자", time: "03.20 11:10", body: "결제 취소 완료되었고 카드사 환불 반영은 영업일 기준 2~3일 소요됩니다." },
+    { id: 1, sender: "회원", time: "03.20 09:55", body: "야간 수영장 운영 시간과 미성년자 이용 기준을 확인하고 싶습니다." },
+    { id: 2, sender: "판매자", time: "03.20 11:10", body: "실내 수영장은 22시까지 운영하며, 보호자 동반 시 미성년자도 입장 가능합니다." },
   ],
 };
 
-export const myInquiryThreadsSeed = inquiryRooms.map((room) => ({
-  id: room.id,
-  title: room.title,
-  type: room.type,
-  status: room.status,
-  lodging: room.lodging,
-  bookingNo: room.bookingNo,
-  updatedAt: room.updatedAt,
-  createdAt: room.updatedAt,
-  body: inquiryMessages[room.id]?.[0]?.body ?? room.preview,
-  preview: room.preview,
-  messages: inquiryMessages[room.id] ?? [],
-}));
+export const myInquiryThreadsSeed = [
+  {
+    id: 401,
+    title: "결제 영수증 재발급 요청",
+    type: "PAYMENT",
+    status: "ANSWERED",
+    lodging: "해운대 오션 스테이",
+    bookingNo: "B-24032",
+    updatedAt: "오늘 11:20",
+    createdAt: "오늘 10:42",
+    body: "3월 결제 영수증을 회사 제출용으로 다시 발급받고 싶습니다.",
+    preview: "이메일로 영수증 재발송을 요청했습니다.",
+    messages: [
+      { id: 1, sender: "회원", time: "오늘 10:42", body: "3월 결제 영수증을 회사 제출용으로 다시 발급받고 싶습니다." },
+      { id: 2, sender: "관리자", time: "오늘 11:20", body: "등록된 이메일로 영수증 PDF를 다시 발송했습니다. 마이페이지 결제 내역에서도 내려받을 수 있습니다." },
+    ],
+  },
+  {
+    id: 402,
+    title: "예약 취소 수수료 기준 확인",
+    type: "BOOKING",
+    status: "OPEN",
+    lodging: "제주 포레스트 하우스",
+    bookingNo: "B-24041",
+    updatedAt: "어제 18:10",
+    createdAt: "어제 18:10",
+    body: "체크인 3일 전 취소 시 수수료가 어떻게 적용되는지 확인하고 싶습니다.",
+    preview: "무료 취소 기준과 실제 차감 금액을 문의했습니다.",
+    messages: [
+      { id: 1, sender: "회원", time: "어제 18:10", body: "체크인 3일 전 취소 시 수수료가 어떻게 적용되는지 확인하고 싶습니다." },
+    ],
+  },
+  {
+    id: 403,
+    title: "계정 인증 메일 재발송 요청",
+    type: "SYSTEM",
+    status: "CLOSED",
+    lodging: "서비스 계정",
+    bookingNo: "연결 없음",
+    updatedAt: "03.21 09:04",
+    createdAt: "03.20 21:16",
+    body: "회원가입 인증 메일이 도착하지 않아 재발송을 요청합니다.",
+    preview: "인증 메일 재발송과 스팸함 확인 안내를 받았습니다.",
+    messages: [
+      { id: 1, sender: "회원", time: "03.20 21:16", body: "회원가입 인증 메일이 도착하지 않아 재발송을 요청합니다." },
+      { id: 2, sender: "관리자", time: "03.20 21:28", body: "인증 메일을 다시 발송했습니다. 수신함과 스팸함을 함께 확인해 주세요." },
+      { id: 3, sender: "관리자", time: "03.21 09:04", body: "정상 인증 완료가 확인되어 문의를 종료 처리했습니다." },
+    ],
+  },
+];
