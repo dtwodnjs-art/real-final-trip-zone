@@ -11,10 +11,46 @@ export default function MyInquiryDetailPage() {
   const { inquiryId } = useParams();
   const navigate = useNavigate();
   const [thread, setThread] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    setThread(getMyInquiryThreadById(inquiryId));
+    let cancelled = false;
+
+    async function loadThread() {
+      try {
+        setIsLoading(true);
+        const nextThread = await getMyInquiryThreadById(inquiryId);
+        if (cancelled) return;
+        setThread(nextThread);
+      } catch (error) {
+        if (cancelled) return;
+        console.error("Failed to load inquiry detail.", error);
+        setThread(null);
+      } finally {
+        if (!cancelled) {
+          setIsLoading(false);
+        }
+      }
+    }
+
+    loadThread();
+
+    return () => {
+      cancelled = true;
+    };
   }, [inquiryId]);
+
+  if (isLoading) {
+    return (
+      <MyPageLayout>
+        <section className="my-list-sheet">
+          <div className="my-empty-state">
+            <strong>문의 상세를 불러오는 중입니다.</strong>
+          </div>
+        </section>
+      </MyPageLayout>
+    );
+  }
 
   if (!thread) {
     return (
@@ -28,8 +64,8 @@ export default function MyInquiryDetailPage() {
     );
   }
 
-  const handleDelete = () => {
-    removeInquiryThread(thread.id);
+  const handleDelete = async () => {
+    await removeInquiryThread(thread.id);
     navigate("/my/inquiries");
   };
 

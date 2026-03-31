@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { authProviders, defaultLoginForm, demoLoginAccounts } from "../../data/authData";
+import { authProviders, defaultLoginForm } from "../../data/authData";
 import {
   getAuthProviderMark,
   getKakaoAuthUrl,
@@ -166,34 +166,6 @@ export default function LoginPage() {
             </Link>
           </div>
         </form>
-
-        <aside className="auth-demo-panel auth-demo-panel-side">
-          <div className="auth-demo-head">
-            <strong>시현 계정</strong>
-            <span>배포 전 제거 예정</span>
-          </div>
-          <p className="auth-demo-copy">개발 확인용 계정이다. 클릭하면 로그인 폼에 자동 입력된다.</p>
-          <div className="auth-demo-list">
-            {demoLoginAccounts.map((account) => (
-              <button
-                key={account.key}
-                type="button"
-                className="auth-demo-account"
-                onClick={() =>
-                  setForm((current) => ({
-                    ...current,
-                    provider: "LOCAL",
-                    email: account.email,
-                    password: account.password,
-                  }))
-                }
-              >
-                <strong>{account.label}</strong>
-                <span>{account.email}</span>
-              </button>
-            ))}
-          </div>
-        </aside>
       </section>
     </div>
   );

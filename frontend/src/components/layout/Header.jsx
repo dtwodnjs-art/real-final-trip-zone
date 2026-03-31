@@ -1,9 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { membershipMilestones, myBookingRows, myProfileSummary } from "../../data/mypageData";
 import { readAuthSession } from "../../features/auth/authSession";
 import { getHeaderRoleLinks, getMembershipLabel, logoutCurrentSession } from "../../features/auth/authViewModels";
-import { getMyCoupons, getMyHome } from "../../services/mypageService";
+import { getMyHome } from "../../services/mypageService";
 
 export default function Header() {
   const location = useLocation();
@@ -76,8 +75,8 @@ export default function Header() {
     navigate("/my/membership");
   };
 
-  const membershipLabel = session?.role === "ROLE_USER" ? homeSnapshot?.profileSummary?.grade ?? myProfileSummary.grade : getMembershipLabel(session);
-  const profileLabel = session?.name ?? homeSnapshot?.profileSummary?.name ?? myProfileSummary.name;
+  const membershipLabel = session?.role === "ROLE_USER" ? homeSnapshot?.profileSummary?.grade ?? "회원" : getMembershipLabel(session);
+  const profileLabel = session?.name ?? homeSnapshot?.profileSummary?.name ?? "TripZone 회원";
   const profileMetaLabel =
     session?.role === "ROLE_ADMIN"
       ? "관리자 대시보드"
@@ -85,9 +84,9 @@ export default function Header() {
         ? "판매자 대시보드"
         : `${membershipLabel} 회원`;
   const roleLinks = getHeaderRoleLinks(session);
-  const availableCouponCount = session?.role === "ROLE_USER" ? homeSnapshot?.overview?.availableCouponCount ?? getMyCoupons().filter((item) => item.status === "사용 가능").length : 0;
-  const upcomingBookingCount = session?.role === "ROLE_USER" ? homeSnapshot?.overview?.upcomingBookingCount ?? myBookingRows.filter((item) => item.status !== "COMPLETED").length : 0;
-  const mileageValue = membershipMilestones.find((item) => item.label === "누적 마일리지")?.value ?? "0P";
+  const availableCouponCount = session?.role === "ROLE_USER" ? homeSnapshot?.overview?.availableCouponCount ?? 0 : 0;
+  const upcomingBookingCount = session?.role === "ROLE_USER" ? homeSnapshot?.overview?.upcomingBookingCount ?? 0 : 0;
+  const mileageValue = homeSnapshot?.profileSummary?.mileage ?? "0P";
 
   return (
     <header className="header">

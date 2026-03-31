@@ -1,14 +1,16 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import MyPageLayout from "../../components/user/MyPageLayout";
-import {
-  myBookingRows,
-  myPageSections,
-  myProfileSummary,
-  paymentHistoryRows,
-  wishlistRows,
-} from "../../data/mypageData";
-import { getMyCoupons, getMyHome } from "../../services/mypageService";
+import { myPageSections } from "../../data/mypageData";
+import { getMyHome } from "../../services/mypageService";
+
+const EMPTY_PROFILE_SUMMARY = {
+  name: "TripZone 회원",
+  grade: "회원",
+  gradeHint: "실제 이용 등급을 불러오지 못했습니다.",
+  status: "상태 확인 중",
+  joinedAt: "가입일 확인 중",
+};
 
 export default function MyPageHomePage() {
   const [homeData, setHomeData] = useState(null);
@@ -39,23 +41,29 @@ export default function MyPageHomePage() {
     };
   }, []);
 
-  const coupons = getMyCoupons();
-  const fallbackUpcomingCount = myBookingRows.filter((item) => item.status !== "COMPLETED").length;
-  const fallbackAvailableCouponCount = coupons.filter((item) => item.status === "사용 가능").length;
-  const fallbackPaidCount = paymentHistoryRows.filter((item) => item.status === "PAID").length;
-  const fallbackNextTrip = myBookingRows.find((item) => item.status !== "COMPLETED") ?? myBookingRows[0];
-  const profileSummary = homeData?.profileSummary ?? myProfileSummary;
+  const profileSummary = homeData?.profileSummary ?? EMPTY_PROFILE_SUMMARY;
   const overview = homeData?.overview;
-  const upcomingCount = overview?.upcomingBookingCount ?? fallbackUpcomingCount;
-  const availableCouponCount = overview?.availableCouponCount ?? fallbackAvailableCouponCount;
-  const paidCount = overview?.paidCount ?? fallbackPaidCount;
+  const upcomingCount = overview?.upcomingBookingCount ?? 0;
+  const availableCouponCount = overview?.availableCouponCount ?? 0;
+  const paidCount = overview?.paidCount ?? 0;
   const overviewItems = [
     { label: "예약중", value: `${upcomingCount}건`, href: "/my/bookings" },
-    { label: "찜 목록", value: `${overview?.wishlistCount ?? wishlistRows.length}건`, href: "/my/wishlist" },
+    { label: "찜 목록", value: `${overview?.wishlistCount ?? 0}건`, href: "/my/wishlist" },
     { label: "사용 가능 쿠폰", value: `${availableCouponCount}장`, href: "/my/coupons" },
     { label: "결제 완료", value: `${paidCount}건`, href: "/my/payments" },
   ];
-  const nextTrip = useMemo(() => fallbackNextTrip, [fallbackNextTrip]);
+  const nextTrip = useMemo(
+    () => ({
+      name: "다음 예약을 확인해 주세요",
+      stay: "예약 내역에서 실제 일정 확인",
+      roomName: "백엔드 요약 보강 대기",
+      status: "PENDING",
+      bookingStatusLabel: "일정 확인",
+      price: "-",
+      guestCount: "-",
+    }),
+    [],
+  );
   const shortcutItems = useMemo(() => {
     const menuMap = new Map((homeData?.menus ?? []).map((item) => [item.href, item]));
     return myPageSections.map((item) => ({

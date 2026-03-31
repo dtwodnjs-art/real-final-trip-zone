@@ -1,4 +1,4 @@
-import { authProviders, demoLoginAccounts } from "../../data/authData";
+import { authProviders } from "../../data/authData";
 import { post } from "../../lib/appClient";
 import { clearAuthSession, readAuthSession, writeAuthSession } from "./authSession";
 
@@ -9,10 +9,6 @@ const APP_ORIGIN = typeof window !== "undefined" ? window.location.origin : "htt
 
 export function getSelectedAuthProvider(providerKey) {
   return authProviders.find((provider) => provider.key === providerKey) ?? authProviders[0];
-}
-
-export function findDemoLoginAccount(email, password) {
-  return demoLoginAccounts.find((account) => account.email === email.trim() && account.password === password);
 }
 
 function getLandingPath(roleNames = []) {
@@ -196,16 +192,6 @@ export function createDefaultLocalSession(form) {
     provider: form.provider,
     role: "ROLE_USER",
     landingTo: "/",
-  });
-}
-
-export function createDemoAccountSession(account, providerKey) {
-  return createAuthSessionPayload({
-    name: account.name,
-    email: account.email,
-    provider: providerKey,
-    role: account.role,
-    landingTo: account.landingTo,
   });
 }
 

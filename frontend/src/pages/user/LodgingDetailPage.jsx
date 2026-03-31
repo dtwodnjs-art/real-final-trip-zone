@@ -10,7 +10,7 @@ import {
   getReviewAverage,
 } from "../../features/lodging-detail/lodgingDetailViewModel";
 import { buildGalleryImages, getRoomMeta } from "../../features/lodging-detail/lodgingDetailUtils";
-import { getLodgingDetailById, getLodgingReviews } from "../../services/lodgingService";
+import { createLodgingReview, getLodgingDetailById, getLodgingReviews } from "../../services/lodgingService";
 import { getMyBookings } from "../../services/mypageService";
 import {
   findMyInquiryRoomByLodgingId,
@@ -63,7 +63,6 @@ export default function LodgingDetailPage() {
   const location = useLocation();
   const navigate = useNavigate();
   const [lodging, setLodging] = useState(null);
-  const lodgingReviews = useMemo(() => getLodgingReviews(), []);
   const [myBookingRows, setMyBookingRows] = useState([]);
   const roomOptions = useMemo(() => (lodging ? buildRoomOptions(lodging) : []), [lodging]);
   const propertyStory = useMemo(() => (lodging ? buildPropertyStory(lodging) : []), [lodging]);
@@ -75,7 +74,9 @@ export default function LodgingDetailPage() {
   const [isInquiryOpen, setIsInquiryOpen] = useState(false);
   const [chatDraft, setChatDraft] = useState("");
   const [reviewDraft, setReviewDraft] = useState({ score: 5, body: "", images: [] });
-  const [reviews, setReviews] = useState(lodgingReviews);
+  const [reviews, setReviews] = useState([]);
+  const [isReviewLoading, setIsReviewLoading] = useState(true);
+  const [reviewNotice, setReviewNotice] = useState("");
   const sellerContact = sellerContactByLodging[lodging?.id] ?? sellerContactByLodging[1];
   const [chatMessages, setChatMessages] = useState([]);
   const [inquiryRoomId, setInquiryRoomId] = useState(null);
@@ -119,6 +120,35 @@ export default function LodgingDetailPage() {
     }
 
     loadLodging();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [lodgingId]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadReviews() {
+      try {
+        setIsReviewLoading(true);
+        const rows = await getLodgingReviews(lodgingId);
+        if (cancelled) return;
+        setReviews(rows);
+        setReviewNotice("");
+      } catch (error) {
+        if (cancelled) return;
+        console.error("Failed to load lodging reviews.", error);
+        setReviews([]);
+        setReviewNotice("리뷰 목록을 불러오지 못했습니다.");
+      } finally {
+        if (!cancelled) {
+          setIsReviewLoading(false);
+        }
+      }
+    }
+
+    loadReviews();
 
     return () => {
       cancelled = true;
@@ -240,29 +270,41 @@ export default function LodgingDetailPage() {
     }
   };
 
-  const handleReviewSubmit = (event) => {
+  const handleReviewSubmit = async (event) => {
     event.preventDefault();
     const body = reviewDraft.body.trim();
     if (!body) return;
 
-    const nextReview = {
-      author: "TripZone 사용자",
-      score: reviewDraft.score.toFixed(1),
-      stay: "방금 작성",
-      body,
-      images: reviewDraft.images,
-    };
+    const completedBooking = myBookingRows.find(
+      (booking) => booking.lodgingId === lodging.id && booking.status === "COMPLETED",
+    );
+    if (!completedBooking) {
+      setReviewNotice("숙박 완료 내역이 있어야 리뷰를 등록할 수 있습니다.");
+      return;
+    }
 
-    setReviews((current) => [nextReview, ...current]);
-    setReviewDraft({ score: 5, body: "", images: [] });
+    try {
+      const nextReview = await createLodgingReview({
+        bookingNo: completedBooking.bookingId,
+        lodgingId: lodging.id,
+        score: reviewDraft.score,
+        body,
+      });
+
+      setReviews((current) => [nextReview, ...current]);
+      setReviewDraft({ score: 5, body: "", images: [] });
+      setReviewNotice("리뷰가 등록되었습니다.");
+    } catch (error) {
+      console.error("Failed to create lodging review.", error);
+      setReviewNotice("리뷰 등록에 실패했습니다.");
+    }
   };
 
   const handleReviewImages = (event) => {
     const files = Array.from(event.target.files ?? []);
     if (!files.length) return;
-
-    const nextImages = files.slice(0, 3).map((file) => URL.createObjectURL(file));
-    setReviewDraft((current) => ({ ...current, images: nextImages }));
+    setReviewNotice("리뷰 이미지는 백엔드 업로드 보강 후 연결합니다.");
+    setReviewDraft((current) => ({ ...current, images: [] }));
   };
 
   const handleInquirySubmit = async (event) => {
@@ -470,6 +512,8 @@ export default function LodgingDetailPage() {
               onSubmit={handleReviewSubmit}
               onImageChange={handleReviewImages}
             />
+            {isReviewLoading ? <div className="my-empty-inline">리뷰를 불러오는 중입니다.</div> : null}
+            {reviewNotice ? <div className="my-empty-inline">{reviewNotice}</div> : null}
           </section>
         </section>
 

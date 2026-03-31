@@ -1,11 +1,10 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import DashboardLayout from "../../components/layout/DashboardLayout";
 import {
   getSellerApplicationDraft,
   getSellerApplicationSteps,
   getSellerApplicationTemplate,
-  submitSellerApplication,
 } from "../../services/dashboardService";
 
 function getStatusLabel(status) {
@@ -29,22 +28,55 @@ function formatSubmittedAt(value) {
 }
 
 export default function SellerApplyPage() {
-  const initialDraft = getSellerApplicationDraft();
-  const [status, setStatus] = useState(initialDraft?.status ?? "PENDING");
-  const [submittedAt, setSubmittedAt] = useState(initialDraft?.submittedAt ?? null);
+  const [status, setStatus] = useState("PENDING");
+  const [submittedAt, setSubmittedAt] = useState(null);
   const [notice, setNotice] = useState("");
   const [error, setError] = useState("");
-  const [isCompleteOpen, setIsCompleteOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [form, setForm] = useState({
-    businessNo: initialDraft?.businessNo ?? "",
-    businessName: initialDraft?.businessName ?? "",
-    owner: initialDraft?.owner ?? "",
-    account: initialDraft?.account ?? "",
+    businessNo: "",
+    businessName: "",
+    owner: "",
+    account: "",
   });
   const sellerApplicationStatus = getSellerApplicationTemplate();
   const sellerApplicationSteps = getSellerApplicationSteps();
   const statusToneClass =
     status === "APPROVED" ? "is-approved" : status === "REJECTED" ? "is-rejected" : "is-pending";
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadDraft() {
+      try {
+        setIsLoading(true);
+        const initialDraft = await getSellerApplicationDraft();
+        if (cancelled) return;
+        setStatus(initialDraft?.status ?? "PENDING");
+        setSubmittedAt(initialDraft?.submittedAt ?? null);
+        setForm({
+          businessNo: initialDraft?.businessNo ?? "",
+          businessName: initialDraft?.businessName ?? "",
+          owner: initialDraft?.owner ?? "",
+          account: initialDraft?.account ?? "",
+        });
+      } catch (loadError) {
+        if (cancelled) return;
+        console.error("Failed to load seller application draft.", loadError);
+        setError("호스트 신청 상태를 불러오지 못했습니다.");
+      } finally {
+        if (!cancelled) {
+          setIsLoading(false);
+        }
+      }
+    }
+
+    loadDraft();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const handleChange = (key, value) => {
     setForm((current) => ({ ...current, [key]: value }));
@@ -66,12 +98,8 @@ export default function SellerApplyPage() {
       setNotice("");
       return;
     }
-    const saved = submitSellerApplication(form);
-    setStatus(saved.status);
-    setSubmittedAt(saved.submittedAt ?? null);
-    setError("");
-    setNotice("신청서가 저장되었습니다. 현재 상태는 승인 대기입니다.");
-    setIsCompleteOpen(true);
+    setError("정산 계좌 컬럼이 백엔드에 없어 아직 실제 제출을 열 수 없습니다.");
+    setNotice("");
   };
 
   return (
@@ -143,6 +171,7 @@ export default function SellerApplyPage() {
               </div>
 
               <div className="profile-summary-note">
+                {isLoading ? <span>호스트 신청 상태를 불러오는 중입니다.</span> : null}
                 <span>현재 상태: {getStatusLabel(status)}</span>
                 <span>마지막 제출: {formatSubmittedAt(submittedAt)}</span>
                 {notice ? <span>{notice}</span> : null}
@@ -169,33 +198,14 @@ export default function SellerApplyPage() {
               </div>
 
               <div className="seller-apply-action-bar">
-                <button type="submit" className="coupon-action-button inquiry-submit-link">신청 제출</button>
+                <button type="submit" className="coupon-action-button inquiry-submit-link" disabled>
+                  신청 제출
+                </button>
                 <Link className="text-link" to="/seller">판매자센터 홈</Link>
               </div>
             </div>
           </section>
         </form>
-
-        {isCompleteOpen ? (
-          <div className="my-feedback-modal" role="dialog" aria-modal="true" aria-labelledby="seller-apply-complete-title">
-            <div className="my-feedback-modal-backdrop" onClick={() => setIsCompleteOpen(false)} />
-            <section className="my-feedback-modal-sheet">
-              <span className="my-feedback-modal-eyebrow">Seller Apply</span>
-              <h2 id="seller-apply-complete-title">판매자 신청이 접수되었습니다.</h2>
-              <p>현재 상태는 승인 대기입니다. 승인 결과가 정리되면 이 화면에서 상태를 바로 확인할 수 있습니다.</p>
-              <div className="my-feedback-modal-meta">
-                <span>상태: {getStatusLabel(status)}</span>
-                <span>제출 시각: {formatSubmittedAt(submittedAt)}</span>
-              </div>
-              <div className="my-feedback-modal-actions">
-                <button type="button" className="coupon-action-button inquiry-submit-link" onClick={() => setIsCompleteOpen(false)}>
-                  확인
-                </button>
-                <Link className="text-link" to="/seller">판매자센터 홈</Link>
-              </div>
-            </section>
-          </div>
-        ) : null}
       </>
     </DashboardLayout>
   );

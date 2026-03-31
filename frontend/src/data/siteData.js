@@ -5,4 +5,3 @@ export * from "./homeData";
 export * from "./lodgingData";
 export * from "./lodgingDetailData";
 export * from "./mypageData";
-export * from "./opsData";

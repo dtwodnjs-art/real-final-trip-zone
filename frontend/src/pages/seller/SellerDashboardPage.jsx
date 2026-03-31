@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import DashboardLayout from "../../components/layout/DashboardLayout";
 import {
   DashboardFocusList,
@@ -11,7 +12,43 @@ import { getSellerDashboardViewModel } from "../../features/dashboard/dashboardV
 import { getSellerDashboardSnapshot } from "../../services/dashboardService";
 
 export default function SellerDashboardPage() {
-  const vm = getSellerDashboardViewModel(getSellerDashboardSnapshot());
+  const [snapshot, setSnapshot] = useState({
+    reservations: [],
+    lodgings: [],
+    metrics: [],
+    sellerTasks: [],
+  });
+  const [notice, setNotice] = useState("");
+  const [isLoading, setIsLoading] = useState(true);
+  const vm = getSellerDashboardViewModel(snapshot);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadSnapshot() {
+      try {
+        setIsLoading(true);
+        const nextSnapshot = await getSellerDashboardSnapshot();
+        if (cancelled) return;
+        setSnapshot(nextSnapshot);
+      } catch (error) {
+        if (cancelled) return;
+        console.error("Failed to load seller dashboard snapshot.", error);
+        setNotice("판매자 대시보드 데이터를 불러오지 못했습니다.");
+      } finally {
+        if (!cancelled) {
+          setIsLoading(false);
+        }
+      }
+    }
+
+    loadSnapshot();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   const activeLodgings = vm.lodgingRows.filter((item) => item.status === "ACTIVE").length;
   const inactiveLodgings = vm.lodgingRows.length - activeLodgings;
   const activeRatio = Math.round((activeLodgings / Math.max(vm.lodgingRows.length, 1)) * 100);
@@ -35,6 +72,8 @@ export default function SellerDashboardPage() {
   return (
     <DashboardLayout role="seller">
       <div className="opsdash is-seller">
+        {isLoading ? <div className="my-empty-inline">판매자 대시보드를 불러오는 중입니다.</div> : null}
+        {notice ? <div className="my-empty-inline">{notice}</div> : null}
         <div className="seller-top-grid">
           <DashboardPanel
             eyebrow="Today First"

@@ -4,12 +4,15 @@ import MyPageLayout from "../../components/user/MyPageLayout";
 import {
   membershipBenefitTiers,
   membershipMilestones,
-  myProfileSummary,
 } from "../../data/mypageData";
 import { getMyProfileSummary } from "../../services/mypageService";
 
+const EMPTY_PROFILE_SUMMARY = {
+  grade: "회원",
+};
+
 export default function MyMembershipPage() {
-  const [profileSummary, setProfileSummary] = useState(myProfileSummary);
+  const [profileSummary, setProfileSummary] = useState(EMPTY_PROFILE_SUMMARY);
 
   useEffect(() => {
     let cancelled = false;

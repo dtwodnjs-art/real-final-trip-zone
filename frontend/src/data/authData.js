@@ -7,40 +7,10 @@ export const authProviders = [
 
 export const defaultLoginForm = {
   provider: "LOCAL",
-  email: "tripzone@example.com",
+  email: "",
   password: "",
   remember: true,
 };
-
-export const demoLoginAccounts = [
-  {
-    key: "user",
-    label: "일반 회원",
-    name: "김민수",
-    email: "minsu@tripzone.test",
-    password: "demo1234",
-    role: "ROLE_USER",
-    landingTo: "/my/profile",
-  },
-  {
-    key: "host",
-    label: "판매자",
-    name: "정하늘",
-    email: "haneul@tripzone.test",
-    password: "demo1234",
-    role: "ROLE_HOST",
-    landingTo: "/seller",
-  },
-  {
-    key: "admin",
-    label: "관리자",
-    name: "운영관리자",
-    email: "admin@tripzone.test",
-    password: "demo1234",
-    role: "ROLE_ADMIN",
-    landingTo: "/admin",
-  },
-];
 
 export const defaultSignupForm = {
   provider: "LOCAL",

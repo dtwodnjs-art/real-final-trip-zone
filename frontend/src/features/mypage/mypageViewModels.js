@@ -9,12 +9,17 @@ export const INQUIRY_STATUS_LABELS = {
   ANSWERED: "답변 완료",
   CLOSED: "종료",
   BLOCKED: "차단",
+  PENDING: "접수",
+  COMPLETED: "답변 완료",
+  DELETE: "삭제",
 };
 
 export const INQUIRY_TYPE_LABELS = {
   BOOKING: "예약 문의",
   PAYMENT: "결제 문의",
   SYSTEM: "서비스 문의",
+  MANAGEMENT: "운영 문의",
+  ETC: "기타 문의",
 };
 
 export const INQUIRY_TYPE_OPTIONS = [
@@ -115,7 +120,7 @@ export function getPaymentSummary(rows) {
 
 export function getInquiryCounts(rows) {
   return {
-    answeredCount: rows.filter((item) => item.status === "ANSWERED").length,
+    answeredCount: rows.filter((item) => item.status === "ANSWERED" || item.status === "COMPLETED").length,
   };
 }
 

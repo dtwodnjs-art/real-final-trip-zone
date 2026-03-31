@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import { eventBanners, participationEventBanners, promoBanners } from "../../data/homeData";
+import { promoBanners } from "../../data/homeData";
 import { readAuthSession } from "../../features/auth/authSession";
 import { fetchLiveEvents } from "../../services/eventService";
 import { claimMyCoupon, fetchCouponCatalog, fetchMyCoupons } from "../../services/mypageService";
@@ -28,10 +28,11 @@ export default function EventsPage() {
   const [couponCatalog, setCouponCatalog] = useState([]);
   const [liveEvents, setLiveEvents] = useState([]);
   const [couponNotice, setCouponNotice] = useState("");
+  const [eventNotice, setEventNotice] = useState("");
   const session = readAuthSession();
-  const couponEvents = couponCatalog.length ? couponCatalog.map(buildCouponEvent) : eventBanners;
+  const couponEvents = couponCatalog.map(buildCouponEvent);
   const selectedEventId = searchParams.get("event");
-  const participationEvents = liveEvents.length ? liveEvents : participationEventBanners;
+  const participationEvents = liveEvents;
   const allEvents = [...couponEvents, ...participationEvents];
   const selectedEvent = allEvents.find((item) => item.id === selectedEventId) ?? null;
   const isClaimed = useMemo(
@@ -56,6 +57,7 @@ export default function EventsPage() {
         setLiveEvents(rows);
       } catch (error) {
         console.error("Failed to load live events.", error);
+        setEventNotice("이벤트 목록을 불러오지 못했습니다.");
       }
     }
 
@@ -67,22 +69,21 @@ export default function EventsPage() {
   }, []);
 
   useEffect(() => {
-    if (!session?.accessToken) {
-      setClaimedCoupons([]);
-      setCouponCatalog([]);
-      return undefined;
-    }
-
     let cancelled = false;
 
     async function loadCoupons() {
       try {
-        const [issuedRows, catalogRows] = await Promise.all([fetchMyCoupons(), fetchCouponCatalog()]);
+        const [issuedRows, catalogRows] = await Promise.all([
+          session?.accessToken ? fetchMyCoupons() : Promise.resolve([]),
+          fetchCouponCatalog(),
+        ]);
         if (cancelled) return;
         setClaimedCoupons(issuedRows);
         setCouponCatalog(catalogRows);
+        setCouponNotice(session?.accessToken ? "" : "로그인 후 실제 쿠폰을 발급할 수 있습니다.");
       } catch (error) {
         console.error("Failed to load event coupons.", error);
+        setCouponNotice("쿠폰 목록을 불러오지 못했습니다.");
       }
     }
 
@@ -107,6 +108,10 @@ export default function EventsPage() {
 
   const handleCouponClaim = async () => {
     if (!selectedEvent?.coupon || isClaimed) return;
+    if (!session?.accessToken) {
+      setCouponNotice("로그인 후 쿠폰을 발급할 수 있습니다.");
+      return;
+    }
 
     try {
       const result = await claimMyCoupon(selectedEvent.coupon);
@@ -210,6 +215,11 @@ export default function EventsPage() {
               </button>
             ))}
           </div>
+          {!couponEvents.length ? (
+            <div className="my-empty-inline">
+              {couponNotice || "현재 노출할 실제 쿠폰 프로모션이 없습니다."}
+            </div>
+          ) : null}
         </div>
 
         <div className="events-board-group">
@@ -227,6 +237,11 @@ export default function EventsPage() {
               </button>
             ))}
           </div>
+          {!participationEvents.length ? (
+            <div className="my-empty-inline">
+              {eventNotice || "현재 진행 중인 참여형 이벤트가 없습니다."}
+            </div>
+          ) : null}
         </div>
       </section>
 

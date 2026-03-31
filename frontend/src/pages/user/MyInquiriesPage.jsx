@@ -10,10 +10,37 @@ import { getMyInquiryThreads } from "../../services/mypageService";
 
 export default function MyInquiriesPage() {
   const [rows, setRows] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState("");
   const { answeredCount } = getInquiryCounts(rows);
 
   useEffect(() => {
-    setRows(getMyInquiryThreads());
+    let cancelled = false;
+
+    async function loadRows() {
+      try {
+        setIsLoading(true);
+        setError("");
+        const nextRows = await getMyInquiryThreads();
+        if (cancelled) return;
+        setRows(nextRows);
+      } catch (loadError) {
+        if (cancelled) return;
+        console.error("Failed to load admin inquiries.", loadError);
+        setRows([]);
+        setError("관리자 문의 연동 상태를 확인 중입니다.");
+      } finally {
+        if (!cancelled) {
+          setIsLoading(false);
+        }
+      }
+    }
+
+    loadRows();
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   return (
@@ -69,6 +96,15 @@ export default function MyInquiriesPage() {
           <strong>관리자 문의 내역</strong>
           <span>답변 완료 {answeredCount}건</span>
         </div>
+        {isLoading ? (
+          <div className="my-empty-panel">
+            <strong>관리자 문의 내역을 불러오는 중입니다.</strong>
+            <p>실제 문의 목록과 답변 상태를 동기화하고 있습니다.</p>
+          </div>
+        ) : null}
+        {error && !isLoading ? (
+          <div className="my-empty-inline">{error}</div>
+        ) : null}
         <div className="payment-row-list inquiry-center-list">
           {rows.map((item) => (
             <article key={item.id} className="payment-row inquiry-center-row">
@@ -95,6 +131,9 @@ export default function MyInquiriesPage() {
             </article>
           ))}
         </div>
+        {!isLoading && !rows.length && !error ? (
+          <div className="my-empty-inline">등록된 관리자 문의가 없습니다.</div>
+        ) : null}
       </section>
     </MyPageLayout>
   );

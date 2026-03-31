@@ -1,98 +1,26 @@
-import { get, isMockDataSource, post } from "../lib/appClient";
-import { readCollection, writeCollection } from "../lib/mockDb";
-import {
-  couponRows,
-  myBookingRows,
-  myProfileDetails,
-  myProfileSummary,
-  paymentHistoryRows,
-  wishlistRows,
-} from "../data/mypageData";
-import {
-  createMyInquiryThread,
-  deleteMyInquiryThread,
-  findMyInquiryThread,
-  readMyInquiryThreads,
-  updateMyInquiryThread,
-} from "../utils/myInquiryCenter";
+import { del, get, patch, post } from "../lib/appClient";
+import { readAuthSession } from "../features/auth/authSession";
 
 // Current backend note:
 // Booking/payment can adapt to current backend DTOs.
 // Inquiry must keep design-doc target shape first:
 // InquiryRoom + InquiryMessage, OPEN/ANSWERED/CLOSED/BLOCKED.
 
-const COLLECTION_KEYS = {
-  myCoupons: "tripzone-my-coupons",
-};
-
-function buildMockHomeResponse() {
-  return {
-    profileSummary: myProfileSummary,
-    overview: {
-      upcomingBookingCount: myBookingRows.filter((item) => item.status !== "COMPLETED").length,
-      wishlistCount: wishlistRows.length,
-      availableCouponCount: couponRows.filter((item) => item.status === "사용 가능").length,
-      paidCount: paymentHistoryRows.filter((item) => item.status === "PAID").length,
-    },
-    menus: [],
-  };
-}
-
-function buildMockProfileResponse() {
-  return {
-    summary: myProfileSummary,
-    details: myProfileDetails,
-  };
-}
-
-function buildMockMileageResponse() {
-  return {
-    summary: {
-      balance: 18400,
-      earnedThisMonth: 2100,
-      usedThisMonth: 8000,
-    },
-    items: mileageHistoryRows,
-  };
-}
-
-function buildMockWishlistResponse() {
-  return {
-    items: wishlistRows,
-  };
-}
-
 export async function getMyHome() {
-  if (isMockDataSource()) {
-    return buildMockHomeResponse();
-  }
-
   return get("/api/mypage/home");
 }
 
 export async function getMyProfileSummary() {
-  if (isMockDataSource()) {
-    return myProfileSummary;
-  }
-
   const response = await get("/api/mypage/profile");
   return response.summary;
 }
 
 export async function getMyProfileDetails() {
-  if (isMockDataSource()) {
-    return myProfileDetails;
-  }
-
   const response = await get("/api/mypage/profile");
   return response.details ?? [];
 }
 
 export async function getMyBookings() {
-  if (isMockDataSource()) {
-    return myBookingRows;
-  }
-
   const response = await get("/api/mypage/bookings");
   return response.items ?? [];
 }
@@ -103,10 +31,6 @@ export async function getMyBookingById(bookingId) {
 }
 
 export async function getMyPayments() {
-  if (isMockDataSource()) {
-    return paymentHistoryRows;
-  }
-
   const response = await get("/api/mypage/payments");
   return response.items ?? [];
 }
@@ -114,10 +38,6 @@ export async function getMyPayments() {
 export async function getMyPaymentByBookingId(bookingId) {
   const rows = await getMyPayments();
   return rows.find((item) => String(item.bookingId) === String(bookingId)) ?? null;
-}
-
-export function getMyCoupons() {
-  return readCollection(COLLECTION_KEYS.myCoupons, couponRows);
 }
 
 function resolveCouponTarget(name = "") {
@@ -194,34 +114,16 @@ function mapCouponCatalogDto(dto) {
 }
 
 export async function fetchCouponCatalog() {
-  if (isMockDataSource()) {
-    return couponRows;
-  }
-
   const rows = await get("/api/coupon/list");
   return rows.map(mapCouponCatalogDto);
 }
 
 export async function fetchMyCoupons() {
-  if (isMockDataSource()) {
-    return getMyCoupons();
-  }
-
   const response = await get("/api/usercoupon/list?page=1&size=100");
   return (response.dtoList ?? []).map(mapUserCouponDto);
 }
 
 export async function claimMyCoupon(coupon) {
-  if (isMockDataSource()) {
-    const rows = getMyCoupons();
-    const exists = rows.some((item) => item.id === coupon.id || item.couponName === coupon.couponName);
-    if (exists) return { ok: false, reason: "duplicate", rows };
-
-    const nextRows = [{ ...coupon }, ...rows];
-    writeCollection(COLLECTION_KEYS.myCoupons, nextRows);
-    return { ok: true, rows: nextRows };
-  }
-
   await post("/api/usercoupon", {
     couponNo: coupon.couponNo ?? coupon.id,
     issuedAt: new Date().toISOString(),
@@ -230,49 +132,92 @@ export async function claimMyCoupon(coupon) {
   return { ok: true, rows: await fetchMyCoupons() };
 }
 
-export function claimMyCouponLegacy(coupon) {
-  const rows = getMyCoupons();
-  const exists = rows.some((item) => item.id === coupon.id || item.couponName === coupon.couponName);
-  if (exists) return { ok: false, reason: "duplicate", rows };
-
-  const nextRows = [{ ...coupon }, ...rows];
-  writeCollection(COLLECTION_KEYS.myCoupons, nextRows);
-  return { ok: true, rows: nextRows };
-}
-
 export async function getMyMileage() {
-  if (isMockDataSource()) {
-    return buildMockMileageResponse();
-  }
-
   return get("/api/mypage/mileage");
 }
 
 export async function getMyWishlist() {
-  if (isMockDataSource()) {
-    return buildMockWishlistResponse().items;
-  }
-
   const response = await get("/api/mypage/wishlist");
   return response.items ?? [];
 }
 
 export function getMyInquiryThreads() {
-  return readMyInquiryThreads();
+  const session = readAuthSession();
+  if (!session?.userNo) return Promise.resolve([]);
+
+  return get(`/api/inquiry/list/${session.userNo}?page=1&size=100`).then((response) =>
+    (response.dtoList ?? []).map((item) => ({
+      id: item.inquiryNo,
+      title: item.title,
+      type: item.inquiryType,
+      status: item.status,
+      bookingNo: "-",
+      lodging: "운영 문의",
+      updatedAt: formatDateValue(item.updDate || item.regDate) || "방금 전",
+      body: item.content ?? "",
+    })),
+  );
 }
 
 export function getMyInquiryThreadById(threadId) {
-  return findMyInquiryThread(threadId);
+  return Promise.all([
+    get(`/api/inquiry/${threadId}`),
+    get("/api/comment/list?page=1&size=200").catch((error) => {
+      if (error.message === "HTTP 404") {
+        return { dtoList: [] };
+      }
+      throw error;
+    }),
+  ]).then(([inquiry, commentResponse]) => {
+    const comments = (commentResponse.dtoList ?? []).filter(
+      (item) => String(item.inquiryNo) === String(threadId),
+    );
+
+    return {
+      id: inquiry.inquiryNo,
+      title: inquiry.title,
+      type: inquiry.inquiryType,
+      status: inquiry.status,
+      bookingNo: "-",
+      lodging: "운영 문의",
+      updatedAt: formatDateValue(inquiry.updDate || inquiry.regDate) || "방금 전",
+      body: inquiry.content ?? "",
+      messages: [
+        {
+          id: `inquiry-${inquiry.inquiryNo}`,
+          sender: "회원",
+          time: formatDateValue(inquiry.regDate) || "방금 전",
+          body: inquiry.content ?? "",
+        },
+        ...comments.map((item) => ({
+          id: `comment-${item.commentNo}`,
+          sender: "운영팀",
+          time: "답변 도착",
+          body: item.content ?? "",
+        })),
+      ],
+    };
+  });
 }
 
 export function createInquiryThread(payload) {
-  return createMyInquiryThread(payload);
+  const session = readAuthSession();
+  return post("/api/inquiry", {
+    userNo: session?.userNo,
+    title: payload.title,
+    inquiryType: payload.type,
+    content: payload.body,
+  });
 }
 
 export function updateInquiryThread(threadId, payload) {
-  return updateMyInquiryThread(threadId, payload);
+  return patch(`/api/inquiry/${threadId}`, {
+    title: payload.title,
+    inquiryType: payload.type,
+    content: payload.body,
+  });
 }
 
 export function removeInquiryThread(threadId) {
-  return deleteMyInquiryThread(threadId);
+  return del(`/api/inquiry/${threadId}`);
 }

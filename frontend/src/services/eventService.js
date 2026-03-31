@@ -1,5 +1,4 @@
-import { get, isMockDataSource } from "../lib/appClient";
-import { participationEventBanners } from "../data/homeData";
+import { get } from "../lib/appClient";
 
 function formatEventPeriod(startDate, endDate) {
   const start = new Date(startDate);
@@ -32,10 +31,6 @@ function mapEventDto(dto) {
 }
 
 export async function fetchLiveEvents() {
-  if (isMockDataSource()) {
-    return participationEventBanners;
-  }
-
   const response = await get("/api/event/list?page=1&size=20");
-  return (response.dtoList ?? []).map(mapEventDto);
+  return (response.dtoList ?? []).filter((dto) => dto.status !== "DRAFT").map(mapEventDto);
 }

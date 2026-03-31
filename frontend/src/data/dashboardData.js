@@ -136,6 +136,6 @@ export const operationBoards = [
 export const structureHighlights = [
   "루트 패키지명은 com.kh.trip 고정",
   "문의 모델은 InquiryRoom / InquiryMessage 고정",
-  "프론트는 mock 기반으로 우선 개발",
+  "프론트는 실제 API 기준으로 단계별 연동",
   "백엔드는 최소 기준만 고정 후 팀원이 확장",
 ];

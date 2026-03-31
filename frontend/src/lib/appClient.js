@@ -1,24 +1,9 @@
 import { clearAuthSession, readAuthSession, writeAuthSession } from "../features/auth/authSession";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "http://100.96.110.114:8080";
-const APP_DATA_SOURCE = import.meta.env.VITE_APP_DATA_SOURCE ?? "http";
 
 export function getApiBaseUrl() {
   return API_BASE_URL;
-}
-
-export function getAppDataSource() {
-  return APP_DATA_SOURCE;
-}
-
-export function isMockDataSource() {
-  return APP_DATA_SOURCE === "mock";
-}
-
-export function assertMockDataSource() {
-  if (!isMockDataSource()) {
-    throw new Error("Mock data source is not configured.");
-  }
 }
 
 function buildUrl(path) {
