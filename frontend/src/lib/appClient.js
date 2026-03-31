@@ -115,6 +115,14 @@ export function patch(path, body, options = {}) {
   });
 }
 
+export function put(path, body, options = {}) {
+  return request(path, {
+    method: "PUT",
+    body: body instanceof FormData ? body : JSON.stringify(body),
+    ...options,
+  });
+}
+
 export function del(path, options = {}) {
   return request(path, {
     method: "DELETE",

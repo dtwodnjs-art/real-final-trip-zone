@@ -1,5 +1,5 @@
 import { readAuthSession } from "../features/auth/authSession";
-import { get } from "../lib/appClient";
+import { get, patch, post, put } from "../lib/appClient";
 import { getSellerInquiryRooms } from "./sellerInquiryService";
 
 function formatDateLabel(value) {
@@ -37,7 +37,7 @@ function formatDateRange(startDate, endDate) {
 }
 
 function mapEnabledStatus(enabled) {
-  return enabled === "1" || enabled === "true" || enabled === true ? "ACTIVE" : "DELETED";
+  return enabled === "1" || enabled === "true" || enabled === true ? "ACTIVE" : "BLOCKED";
 }
 
 function mapInquiryStatus(status) {
@@ -65,7 +65,7 @@ function mapHostProfileDto(dto) {
     userNo: dto.userNo,
     business: dto.businessName ?? `호스트 ${dto.hostNo}`,
     owner: dto.ownerName ?? "-",
-    status: dto.approvalStatus ?? "PENDING",
+    status: dto.enabled === "0" ? "SUSPENDED" : dto.approvalStatus ?? "PENDING",
     region: "-",
     businessNo: dto.businessNumber ?? "-",
     rejectReason: dto.rejectReason ?? "",
@@ -73,13 +73,21 @@ function mapHostProfileDto(dto) {
 }
 
 function mapEventDto(dto) {
+  const status = dto.status ?? "DRAFT";
+
   return {
     id: dto.eventNo,
     title: dto.title ?? `이벤트 ${dto.eventNo}`,
-    status: dto.status ?? "-",
+    status,
+    statusLabel:
+      status === "ONGOING" ? "노출중" :
+      status === "HIDDEN" ? "숨김" :
+      status === "ENDED" ? "종료" : "초안",
     target: dto.couponNames?.length ? dto.couponNames.join(", ") : "전체 회원",
     period: formatDateRange(dto.startDate, dto.endDate),
     content: dto.content ?? "",
+    startDate: dto.startDate ?? "",
+    endDate: dto.endDate ?? "",
   };
 }
 
@@ -198,8 +206,11 @@ export async function getAdminUsers() {
   return (response.dtoList ?? []).map(mapAdminUserDto);
 }
 
-export async function updateAdminUserStatus() {
-  throw new Error("회원 상태 변경 API 계약 확인 후 연결합니다.");
+export async function updateAdminUserStatus(userNo, nextStatus) {
+  const response = await patch(`/api/admin/users/${userNo}/status`, {
+    status: nextStatus,
+  });
+  return mapAdminUserDto(response);
 }
 
 export async function getAdminSellers() {
@@ -207,8 +218,21 @@ export async function getAdminSellers() {
   return rows.map(mapHostProfileDto);
 }
 
-export async function updateAdminSellerStatus() {
-  throw new Error("판매자 승인/반려 액션은 백엔드 계약 정리 후 연결합니다.");
+export async function updateAdminSellerStatus(hostNo, nextStatus) {
+  if (nextStatus === "APPROVED") {
+    await patch(`/api/admin/${hostNo}/approve`, {});
+  } else if (nextStatus === "REJECTED") {
+    await patch(`/api/admin/${hostNo}/reject`, { rejectReason: "관리자 반려 처리" });
+  } else if (nextStatus === "SUSPENDED") {
+    await put(`/api/hosts/${hostNo}/delete`, {});
+  } else if (nextStatus === "ACTIVE") {
+    await put(`/api/hosts/${hostNo}/restore`, {});
+  } else {
+    throw new Error("지원하지 않는 판매자 상태입니다.");
+  }
+
+  const rows = await get("/api/hosts");
+  return rows.map(mapHostProfileDto);
 }
 
 export async function getAdminEvents() {
@@ -216,12 +240,30 @@ export async function getAdminEvents() {
   return (response.dtoList ?? []).map(mapEventDto);
 }
 
-export async function updateAdminEventStatus() {
-  throw new Error("이벤트 상태 변경은 백엔드 폼 계약 정리 후 연결합니다.");
+export async function updateAdminEventStatus(eventId, nextStatus, currentEvent) {
+  const formData = new FormData();
+  formData.append("title", currentEvent.title);
+  formData.append("content", currentEvent.content ?? "");
+  formData.append("startDate", currentEvent.startDate);
+  formData.append("endDate", currentEvent.endDate);
+  formData.append("status", nextStatus);
+
+  await put(`/api/event/${eventId}`, formData);
+  const refreshed = await get(`/api/event/${eventId}`);
+  return mapEventDto(refreshed);
 }
 
-export async function saveAdminEvent() {
-  throw new Error("이벤트 수정은 백엔드 폼 계약 정리 후 연결합니다.");
+export async function saveAdminEvent(eventId, draft, currentEvent) {
+  const formData = new FormData();
+  formData.append("title", draft.title);
+  formData.append("content", draft.content ?? currentEvent.content ?? "");
+  formData.append("startDate", draft.startDate);
+  formData.append("endDate", draft.endDate);
+  formData.append("status", currentEvent.status ?? "DRAFT");
+
+  await put(`/api/event/${eventId}`, formData);
+  const refreshed = await get(`/api/event/${eventId}`);
+  return mapEventDto(refreshed);
 }
 
 export async function getAdminInquiries() {
@@ -238,8 +280,11 @@ export async function getAdminInquiries() {
   );
 }
 
-export async function updateAdminInquiryStatus() {
-  throw new Error("관리자 문의 상태 변경은 백엔드 상태값 정리 후 연결합니다.");
+export async function updateAdminInquiryStatus(inquiryNo, nextStatus) {
+  const response = await patch(`/api/admin/inquiries/${inquiryNo}/status`, {
+    status: nextStatus,
+  });
+  return mapInquiryDto(response);
 }
 
 export async function getAdminReviews() {
@@ -282,8 +327,11 @@ export async function getSellerLodgings() {
     .map(mapSellerLodgingDto);
 }
 
-export async function updateSellerLodgingStatus() {
-  throw new Error("숙소 상태 변경은 백엔드 수정 계약 정리 후 연결합니다.");
+export async function updateSellerLodgingStatus(lodgingId, nextStatus) {
+  const formData = new FormData();
+  formData.append("status", nextStatus);
+  const response = await patch(`/api/lodgings/${lodgingId}`, formData);
+  return mapSellerLodgingDto(response);
 }
 
 export async function getSellerReservations() {
@@ -294,8 +342,11 @@ export async function getSellerReservations() {
   return (response.dtoList ?? []).map(mapReservationDto);
 }
 
-export async function updateSellerReservationStatus() {
-  throw new Error("예약 상태 변경 API가 없어 읽기 전용으로 유지합니다.");
+export async function updateSellerReservationStatus(bookingNo, nextStatus) {
+  const response = await patch(`/api/seller/bookings/${bookingNo}/status`, {
+    status: nextStatus,
+  });
+  return mapReservationDto(response);
 }
 
 export async function getSellerRooms() {
@@ -305,8 +356,11 @@ export async function getSellerRooms() {
   );
 }
 
-export async function updateSellerRoomStatus() {
-  throw new Error("객실 상태 변경은 백엔드 수정 계약 정리 후 연결합니다.");
+export async function updateSellerRoomStatus(roomId, nextStatus, lodgingName) {
+  const response = await patch(`/api/rooms/${roomId}`, {
+    status: nextStatus,
+  });
+  return mapSellerRoomDto(response, lodgingName);
 }
 
 export async function getSellerAssets() {
@@ -320,15 +374,15 @@ export async function updateSellerAsset() {
 
 export function getSellerApplicationTemplate() {
   return [
-    { label: "현재 상태", value: "PENDING", display: "승인 대기", tone: "sand" },
-    { label: "서류 접수", value: "PENDING", display: "백엔드 보강 대기", tone: "mint" },
-    { label: "계좌 연동", value: "BLOCKED", display: "정산 계좌 컬럼 필요", tone: "blue" },
+    { label: "현재 상태", value: "READY", display: "신청 전", tone: "sand" },
+    { label: "서류 접수", value: "READY", display: "신청서 제출 가능", tone: "mint" },
+    { label: "정산 계좌", value: "INFO", display: "승인 후 별도 관리", tone: "blue" },
   ];
 }
 
 export function getSellerApplicationSteps() {
   return [
-    "사업자 정보와 정산 계좌 등록",
+    "사업자 정보 등록",
     "대표 숙소 기본 정보 입력",
     "운영 정책과 취소 규정 확인",
     "승인 결과는 판매자센터에서 확인",
@@ -337,14 +391,45 @@ export function getSellerApplicationSteps() {
 
 export async function getSellerApplicationDraft() {
   const host = await getCurrentHostProfile();
+  const submittedAtSource = host?.updDate ?? host?.regDate ?? null;
   return {
-    status: host?.approvalStatus ?? "PENDING",
+    status: host?.approvalStatus ?? "READY",
     businessNo: host?.businessNumber ?? "",
     businessName: host?.businessName ?? "",
     owner: host?.ownerName ?? "",
     account: "",
-    submittedAt: host ? formatDateTimeLabel(new Date().toISOString()) : null,
+    submittedAt: submittedAtSource ? formatDateTimeLabel(submittedAtSource) : null,
   };
+}
+
+export async function submitSellerApplication(form) {
+  const session = readAuthSession();
+  if (!session?.userNo) {
+    throw new Error("로그인 정보가 없습니다.");
+  }
+
+  const payload = {
+    userNo: session.userNo,
+    businessNumber: form.businessNo.trim(),
+    businessName: form.businessName.trim(),
+    ownerName: form.owner.trim(),
+  };
+
+  const host = await getCurrentHostProfile();
+
+  if (!host) {
+    await post("/api/hosts/register", payload);
+  } else if (host.approvalStatus === "REJECTED") {
+    await patch(`/api/hosts/${host.hostNo}`, payload);
+  } else if (host.approvalStatus === "PENDING") {
+    throw new Error("이미 승인 대기 중인 신청서가 있습니다.");
+  } else if (host.approvalStatus === "APPROVED") {
+    throw new Error("이미 승인된 호스트 계정입니다.");
+  } else {
+    throw new Error("현재 상태에서는 신청서를 다시 제출할 수 없습니다.");
+  }
+
+  return getSellerApplicationDraft();
 }
 
 export async function getSellerMetrics() {

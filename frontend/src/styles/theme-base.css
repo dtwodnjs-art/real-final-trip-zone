@@ -607,7 +607,7 @@ button {
 }
 
 .auth-shell-login {
-  grid-template-columns: minmax(0, 1.02fr) minmax(420px, 500px) 240px;
+  grid-template-columns: minmax(0, 1.08fr) minmax(420px, 500px);
 }
 
 .auth-demo-panel {

@@ -50,7 +50,9 @@ export default function SellerLodgingsPage() {
   const updateStatus = async (nextStatus) => {
     if (!selected) return;
     try {
-      await updateSellerLodgingStatus(selected.id, nextStatus);
+      const updated = await updateSellerLodgingStatus(selected.id, nextStatus);
+      setRows((prev) => prev.map((row) => (row.id === selected.id ? { ...row, ...updated } : row)));
+      setNotice("");
     } catch (error) {
       setNotice(error.message);
     }

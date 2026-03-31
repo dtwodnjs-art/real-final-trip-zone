@@ -5,7 +5,10 @@ import { clearAuthSession, readAuthSession, writeAuthSession } from "./authSessi
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID ?? "";
 const KAKAO_CLIENT_ID = import.meta.env.VITE_KAKAO_CLIENT_ID ?? "";
 const NAVER_CLIENT_ID = import.meta.env.VITE_NAVER_CLIENT_ID ?? "";
-const APP_ORIGIN = typeof window !== "undefined" ? window.location.origin : "http://localhost:5173";
+const KAKAO_REDIRECT_URI =
+  import.meta.env.VITE_KAKAO_REDIRECT_URI ?? "http://localhost:5173/auth/kakao/callback";
+const NAVER_REDIRECT_URI =
+  import.meta.env.VITE_NAVER_REDIRECT_URI ?? "http://localhost:5173/auth/naver/callback";
 
 export function getSelectedAuthProvider(providerKey) {
   return authProviders.find((provider) => provider.key === providerKey) ?? authProviders[0];
@@ -87,8 +90,7 @@ export function getKakaoAuthUrl() {
     throw new Error("Kakao client id is not configured.");
   }
 
-  const redirectUri = `${APP_ORIGIN}/auth/kakao/callback`;
-  return `https://kauth.kakao.com/oauth/authorize?client_id=${encodeURIComponent(KAKAO_CLIENT_ID)}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code`;
+  return `https://kauth.kakao.com/oauth/authorize?client_id=${encodeURIComponent(KAKAO_CLIENT_ID)}&redirect_uri=${encodeURIComponent(KAKAO_REDIRECT_URI)}&response_type=code`;
 }
 
 export function getNaverAuthUrl() {
@@ -96,15 +98,17 @@ export function getNaverAuthUrl() {
     throw new Error("Naver client id is not configured.");
   }
 
-  const redirectUri = `${APP_ORIGIN}/auth/naver/callback`;
   const state = crypto.randomUUID();
   window.sessionStorage.setItem("tripzone-naver-state", state);
-  return `https://nid.naver.com/oauth2.0/authorize?response_type=code&client_id=${encodeURIComponent(NAVER_CLIENT_ID)}&redirect_uri=${encodeURIComponent(redirectUri)}&state=${encodeURIComponent(state)}`;
+  return `https://nid.naver.com/oauth2.0/authorize?response_type=code&client_id=${encodeURIComponent(NAVER_CLIENT_ID)}&redirect_uri=${encodeURIComponent(NAVER_REDIRECT_URI)}&state=${encodeURIComponent(state)}`;
 }
 
 export async function loginWithSocialCode(provider, code, state) {
   const endpoint = provider === "KAKAO" ? "/api/auth/kakao" : "/api/auth/naver";
-  const payload = provider === "NAVER" ? { code, state } : { code };
+  const payload =
+    provider === "NAVER"
+      ? { code, state }
+      : { code, redirectUri: KAKAO_REDIRECT_URI };
   const response = await post(endpoint, payload);
   return createAuthSessionPayloadFromResponse(response, `${provider.toLowerCase()}@tripzone.social`, provider);
 }

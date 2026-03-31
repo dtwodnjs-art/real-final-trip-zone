@@ -12,15 +12,16 @@ const columns = [
 
 export default function AdminEventsPage() {
   const [rows, setRows] = useState([]);
-  const [selectedTitle, setSelectedTitle] = useState(null);
+  const [selectedEventId, setSelectedEventId] = useState(null);
   const [notice, setNotice] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [draft, setDraft] = useState({
     title: "",
-    target: "",
-    period: "",
+    content: "",
+    startDate: "",
+    endDate: "",
   });
-  const selectedEvent = rows.find((row) => row.title === selectedTitle) ?? rows[0];
+  const selectedEvent = rows.find((row) => row.id === selectedEventId) ?? rows[0];
 
   useEffect(() => {
     let cancelled = false;
@@ -31,9 +32,14 @@ export default function AdminEventsPage() {
         const nextRows = await getAdminEvents();
         if (cancelled) return;
         setRows(nextRows);
-        setSelectedTitle(nextRows[0]?.title ?? null);
+        setSelectedEventId(nextRows[0]?.id ?? null);
         if (nextRows[0]) {
-          setDraft({ title: nextRows[0].title, target: nextRows[0].target, period: nextRows[0].period });
+          setDraft({
+            title: nextRows[0].title,
+            content: nextRows[0].content ?? "",
+            startDate: nextRows[0].startDate ? nextRows[0].startDate.slice(0, 16) : "",
+            endDate: nextRows[0].endDate ? nextRows[0].endDate.slice(0, 16) : "",
+          });
         }
       } catch (error) {
         if (cancelled) return;
@@ -53,16 +59,23 @@ export default function AdminEventsPage() {
     };
   }, []);
 
-  const syncDraft = (title) => {
-    const target = rows.find((row) => row.title === title);
+  const syncDraft = (eventId) => {
+    const target = rows.find((row) => row.id === eventId);
     if (!target) return;
-    setDraft({ title: target.title, target: target.target, period: target.period });
+    setDraft({
+      title: target.title,
+      content: target.content ?? "",
+      startDate: target.startDate ? target.startDate.slice(0, 16) : "",
+      endDate: target.endDate ? target.endDate.slice(0, 16) : "",
+    });
   };
 
   const updateStatus = async (nextStatus) => {
     if (!selectedEvent) return;
     try {
-      await updateAdminEventStatus(selectedEvent.title, nextStatus);
+      const updatedEvent = await updateAdminEventStatus(selectedEvent.id, nextStatus, selectedEvent);
+      setRows((current) => current.map((row) => (row.id === updatedEvent.id ? updatedEvent : row)));
+      setNotice("이벤트 상태를 변경했습니다.");
     } catch (error) {
       setNotice(error.message);
     }
@@ -71,7 +84,9 @@ export default function AdminEventsPage() {
   const handleSave = async () => {
     if (!selectedEvent) return;
     try {
-      await saveAdminEvent(selectedEvent.title, draft);
+      const updatedEvent = await saveAdminEvent(selectedEvent.id, draft, selectedEvent);
+      setRows((current) => current.map((row) => (row.id === updatedEvent.id ? updatedEvent : row)));
+      setNotice("이벤트 정보를 저장했습니다.");
     } catch (error) {
       setNotice(error.message);
     }
@@ -83,7 +98,7 @@ export default function AdminEventsPage() {
         <div className="dash-page-header-copy">
           <p className="eyebrow">이벤트 운영</p>
           <h1>이벤트 · 쿠폰 관리</h1>
-          <p>노출 {rows.filter((r) => r.status === "노출중").length}건 · 검수 {rows.filter((r) => r.status === "검수중").length}건</p>
+          <p>노출 {rows.filter((r) => r.status === "ONGOING").length}건 · 초안 {rows.filter((r) => r.status === "DRAFT").length}건 · 숨김 {rows.filter((r) => r.status === "HIDDEN").length}건</p>
           {notice ? <p>{notice}</p> : null}
         </div>
       </div>
@@ -93,12 +108,12 @@ export default function AdminEventsPage() {
           {isLoading ? <div className="my-empty-inline">이벤트 목록을 불러오는 중입니다.</div> : null}
           <DataTable
             columns={columns}
-            rows={rows}
-            getRowKey={(row) => row.title}
-            selectedKey={selectedTitle}
+            rows={rows.map((row) => ({ ...row, status: row.statusLabel }))}
+            getRowKey={(row) => row.id}
+            selectedKey={selectedEventId}
             onRowClick={(row) => {
-              setSelectedTitle(row.title);
-              syncDraft(row.title);
+              setSelectedEventId(row.id);
+              syncDraft(row.id);
             }}
           />
         </section>
@@ -110,17 +125,21 @@ export default function AdminEventsPage() {
             <input value={draft.title} onChange={(e) => setDraft((c) => ({ ...c, title: e.target.value }))} />
           </div>
           <div className="dash-field">
-            <span>대상</span>
-            <input value={draft.target} onChange={(e) => setDraft((c) => ({ ...c, target: e.target.value }))} />
+            <span>내용</span>
+            <input value={draft.content} onChange={(e) => setDraft((c) => ({ ...c, content: e.target.value }))} />
           </div>
           <div className="dash-field">
-            <span>운영 기간</span>
-            <input value={draft.period} onChange={(e) => setDraft((c) => ({ ...c, period: e.target.value }))} />
+            <span>시작 일시</span>
+            <input type="datetime-local" value={draft.startDate} onChange={(e) => setDraft((c) => ({ ...c, startDate: e.target.value }))} />
+          </div>
+          <div className="dash-field">
+            <span>종료 일시</span>
+            <input type="datetime-local" value={draft.endDate} onChange={(e) => setDraft((c) => ({ ...c, endDate: e.target.value }))} />
           </div>
           <div className="dash-action-grid">
             <button type="button" className="dash-action-btn is-primary" onClick={handleSave} disabled={!selectedEvent}>저장</button>
-            <button type="button" className="dash-action-btn" onClick={() => updateStatus("노출중")} disabled={!selectedEvent}>노출</button>
-            <button type="button" className="dash-action-btn is-danger" onClick={() => updateStatus("숨김")} disabled={!selectedEvent}>숨김</button>
+            <button type="button" className="dash-action-btn" onClick={() => updateStatus("ONGOING")} disabled={!selectedEvent}>노출</button>
+            <button type="button" className="dash-action-btn is-danger" onClick={() => updateStatus("HIDDEN")} disabled={!selectedEvent}>숨김</button>
           </div>
         </div>
       </div>

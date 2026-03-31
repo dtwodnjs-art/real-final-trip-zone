@@ -4,7 +4,12 @@ import MyPageLayout from "../../components/user/MyPageLayout";
 import { getProfileFieldGroups } from "../../features/mypage/mypageViewModels";
 import { clearAuthSession } from "../../utils/authSession";
 import { useEffect } from "react";
-import { getMyProfileDetails, getMyProfileSummary } from "../../services/mypageService";
+import {
+  changeMyPassword,
+  getMyProfileDetails,
+  getMyProfileSummary,
+  withdrawMyAccount,
+} from "../../services/mypageService";
 
 export default function MyProfilePage() {
   const navigate = useNavigate();
@@ -18,6 +23,8 @@ export default function MyProfilePage() {
     confirmPassword: "",
   });
   const [accountActionNotice, setAccountActionNotice] = useState("");
+  const [isSavingPassword, setIsSavingPassword] = useState(false);
+  const [isWithdrawing, setIsWithdrawing] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -49,7 +56,7 @@ export default function MyProfilePage() {
     setPasswordForm((current) => ({ ...current, [key]: value }));
   };
 
-  const handlePasswordSave = () => {
+  const handlePasswordSave = async () => {
     if (!passwordForm.nextPassword.trim()) {
       setAccountActionNotice("새 비밀번호를 입력해 주세요.");
       return;
@@ -65,11 +72,32 @@ export default function MyProfilePage() {
       return;
     }
 
-    setAccountActionNotice("비밀번호 변경 API 보강 후 실제 저장을 연결합니다.");
+    try {
+      setIsSavingPassword(true);
+      await changeMyPassword(passwordForm.nextPassword, passwordForm.confirmPassword);
+      setAccountActionNotice("비밀번호를 변경했습니다.");
+      setIsPasswordEditing(false);
+      setPasswordForm({ nextPassword: "", confirmPassword: "" });
+    } catch (error) {
+      console.error("Failed to change password.", error);
+      setAccountActionNotice(error.message || "비밀번호를 변경하지 못했습니다.");
+    } finally {
+      setIsSavingPassword(false);
+    }
   };
 
-  const handleWithdraw = () => {
-    setAccountActionNotice("회원 탈퇴는 백엔드 보강 후 열립니다.");
+  const handleWithdraw = async () => {
+    try {
+      setIsWithdrawing(true);
+      await withdrawMyAccount();
+      clearAuthSession();
+      navigate("/login", { replace: true });
+    } catch (error) {
+      console.error("Failed to withdraw account.", error);
+      setAccountActionNotice(error.message || "회원 탈퇴를 처리하지 못했습니다.");
+    } finally {
+      setIsWithdrawing(false);
+    }
   };
 
   const handleLogoutAll = () => {
@@ -131,7 +159,7 @@ export default function MyProfilePage() {
                   <div className="profile-password-panel profile-password-panel-inline">
                     <div className="profile-password-head">
                       <strong>비밀번호 변경</strong>
-                      <p>비밀번호 변경 API가 아직 없어 실제 저장은 막아 둔 상태입니다.</p>
+                      <p>새 비밀번호와 확인 값을 입력하면 바로 저장됩니다.</p>
                     </div>
                     <div className="profile-password-grid">
                       <label className="profile-form-field">
@@ -154,7 +182,9 @@ export default function MyProfilePage() {
                       </label>
                     </div>
                     <div className="profile-password-actions">
-                      <button type="button" className="coupon-action-button" onClick={handlePasswordSave}>변경 저장</button>
+                      <button type="button" className="coupon-action-button" onClick={handlePasswordSave} disabled={isSavingPassword}>
+                        {isSavingPassword ? "저장 중..." : "변경 저장"}
+                      </button>
                       <button
                         type="button"
                         className="ghost-action-button"
@@ -187,9 +217,9 @@ export default function MyProfilePage() {
           <button type="button" className="coupon-action-button" onClick={handleLogoutAll}>로그아웃</button>
         </section>
         <section className="profile-exit-row">
-          <span>회원 탈퇴는 백엔드 보강 후 이 화면에서 이어집니다.</span>
-          <button type="button" className="profile-withdraw-link" onClick={handleWithdraw}>
-            회원탈퇴
+          <span>회원 탈퇴를 진행하면 현재 계정 세션이 종료됩니다.</span>
+          <button type="button" className="profile-withdraw-link" onClick={handleWithdraw} disabled={isWithdrawing}>
+            {isWithdrawing ? "처리 중..." : "회원탈퇴"}
           </button>
         </section>
       </section>

@@ -5,9 +5,11 @@ import {
   getSellerApplicationDraft,
   getSellerApplicationSteps,
   getSellerApplicationTemplate,
+  submitSellerApplication,
 } from "../../services/dashboardService";
 
 function getStatusLabel(status) {
+  if (status === "READY") return "신청 전";
   if (status === "PENDING") return "승인 대기";
   if (status === "APPROVED") return "승인 완료";
   if (status === "REJECTED") return "반려";
@@ -28,11 +30,12 @@ function formatSubmittedAt(value) {
 }
 
 export default function MySellerApplyPage() {
-  const [status, setStatus] = useState("PENDING");
+  const [status, setStatus] = useState("READY");
   const [submittedAt, setSubmittedAt] = useState(null);
   const [notice, setNotice] = useState("");
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [form, setForm] = useState({
     businessNo: "",
     businessName: "",
@@ -52,7 +55,7 @@ export default function MySellerApplyPage() {
         setIsLoading(true);
         const initialDraft = await getSellerApplicationDraft();
         if (cancelled) return;
-        setStatus(initialDraft?.status ?? "PENDING");
+        setStatus(initialDraft?.status ?? "READY");
         setSubmittedAt(initialDraft?.submittedAt ?? null);
         setForm({
           businessNo: initialDraft?.businessNo ?? "",
@@ -86,11 +89,10 @@ export default function MySellerApplyPage() {
     if (!form.businessNo.trim()) return "사업자번호를 입력해 주세요.";
     if (!form.businessName.trim()) return "상호명을 입력해 주세요.";
     if (!form.owner.trim()) return "대표자명을 입력해 주세요.";
-    if (!form.account.trim()) return "정산 계좌를 입력해 주세요.";
     return "";
   };
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
     const nextError = validateForm();
     if (nextError) {
@@ -98,8 +100,21 @@ export default function MySellerApplyPage() {
       setNotice("");
       return;
     }
-    setError("정산 계좌 컬럼이 백엔드에 없어 아직 실제 제출을 열 수 없습니다.");
-    setNotice("");
+
+    try {
+      setIsSubmitting(true);
+      setError("");
+      const nextDraft = await submitSellerApplication(form);
+      setStatus(nextDraft?.status ?? "READY");
+      setSubmittedAt(nextDraft?.submittedAt ?? null);
+      setNotice("호스트 신청서를 제출했습니다.");
+    } catch (submitError) {
+      console.error("Failed to submit seller application.", submitError);
+      setError(submitError.message || "호스트 신청서를 제출하지 못했습니다.");
+      setNotice("");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -154,7 +169,7 @@ export default function MySellerApplyPage() {
               <div className="seller-apply-note-list">
                 <article className="seller-apply-note-card">
                   <span>심사 기준</span>
-                  <strong>사업자 정보와 정산 계좌 일치 여부</strong>
+                  <strong>사업자 정보 일치 여부와 제출 상태</strong>
                 </article>
                 <article className="seller-apply-note-card">
                   <span>확인 위치</span>
@@ -166,13 +181,14 @@ export default function MySellerApplyPage() {
             <div className="seller-apply-panel">
               <div className="mypage-subsection-head">
                 <strong>신청서 작성</strong>
-                <span>정산 계좌와 사업자 정보를 입력합니다.</span>
+                <span>현재 백엔드가 지원하는 사업자 정보만 먼저 제출합니다.</span>
               </div>
 
               <div className="profile-summary-note">
                 {isLoading ? <span>호스트 신청 상태를 불러오는 중입니다.</span> : null}
                 <span>현재 상태: {getStatusLabel(status)}</span>
                 <span>마지막 제출: {formatSubmittedAt(submittedAt)}</span>
+                <span>정산 계좌는 승인 후 별도 운영 절차에서 관리합니다.</span>
                 {notice ? <span>{notice}</span> : null}
                 {error ? <span>{error}</span> : null}
               </div>
@@ -192,13 +208,13 @@ export default function MySellerApplyPage() {
                 </label>
                 <label className="field-block seller-apply-field">
                   <span>정산 계좌</span>
-                  <input value={form.account} onChange={(e) => handleChange("account", e.target.value)} placeholder="은행 / 계좌번호" />
+                  <input value={form.account} onChange={(e) => handleChange("account", e.target.value)} placeholder="승인 후 별도 관리" />
                 </label>
               </div>
 
               <div className="seller-apply-action-bar">
-                <button type="submit" className="coupon-action-button inquiry-submit-link" disabled>
-                  신청 제출
+                <button type="submit" className="coupon-action-button inquiry-submit-link" disabled={isSubmitting}>
+                  {isSubmitting ? "제출 중..." : "신청 제출"}
                 </button>
                 <Link className="text-link" to="/my/profile">내 정보 관리</Link>
               </div>

@@ -12,10 +12,10 @@ const columns = [
 
 export default function AdminSellersPage() {
   const [rows, setRows] = useState([]);
-  const [selectedBusiness, setSelectedBusiness] = useState(null);
+  const [selectedSellerId, setSelectedSellerId] = useState(null);
   const [notice, setNotice] = useState("");
   const [isLoading, setIsLoading] = useState(true);
-  const selectedSeller = rows.find((row) => row.business === selectedBusiness) ?? rows[0];
+  const selectedSeller = rows.find((row) => row.id === selectedSellerId) ?? rows[0];
 
   useEffect(() => {
     let cancelled = false;
@@ -26,7 +26,7 @@ export default function AdminSellersPage() {
         const nextRows = await getAdminSellers();
         if (cancelled) return;
         setRows(nextRows);
-        setSelectedBusiness(nextRows[0]?.business ?? null);
+        setSelectedSellerId(nextRows[0]?.id ?? null);
       } catch (error) {
         if (cancelled) return;
         console.error("Failed to load admin sellers.", error);
@@ -48,7 +48,9 @@ export default function AdminSellersPage() {
   const updateStatus = async (nextStatus) => {
     if (!selectedSeller) return;
     try {
-      await updateAdminSellerStatus(selectedSeller.business, nextStatus);
+      const nextRows = await updateAdminSellerStatus(selectedSeller.id, nextStatus);
+      setRows(nextRows);
+      setNotice("판매자 상태를 변경했습니다.");
     } catch (error) {
       setNotice(error.message);
     }
@@ -71,9 +73,9 @@ export default function AdminSellersPage() {
           <DataTable
             columns={columns}
             rows={rows}
-            getRowKey={(row) => row.business}
-            selectedKey={selectedBusiness}
-            onRowClick={(row) => setSelectedBusiness(row.business)}
+            getRowKey={(row) => row.id}
+            selectedKey={selectedSellerId}
+            onRowClick={(row) => setSelectedSellerId(row.id)}
           />
         </section>
 
@@ -81,6 +83,7 @@ export default function AdminSellersPage() {
           <h3>{selectedSeller?.business ?? "—"}</h3>
           <p>{selectedSeller?.owner} · {selectedSeller?.region}</p>
           <div className="dash-action-grid">
+            <button type="button" className="dash-action-btn is-primary" onClick={() => updateStatus("ACTIVE")} disabled={!selectedSeller}>복구</button>
             <button type="button" className="dash-action-btn is-primary" onClick={() => updateStatus("APPROVED")} disabled={!selectedSeller}>승인</button>
             <button type="button" className="dash-action-btn is-danger" onClick={() => updateStatus("REJECTED")} disabled={!selectedSeller}>반려</button>
             <button type="button" className="dash-action-btn is-danger" onClick={() => updateStatus("SUSPENDED")} disabled={!selectedSeller}>중지</button>

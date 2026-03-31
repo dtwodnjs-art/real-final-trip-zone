@@ -50,7 +50,15 @@ export default function SellerRoomsPage() {
   const updateStatus = async (nextStatus) => {
     if (!selected) return;
     try {
-      await updateSellerRoomStatus(selectedKey, nextStatus);
+      const updated = await updateSellerRoomStatus(selected.id, nextStatus, selected.lodging);
+      setRows((prev) =>
+        prev.map((row) =>
+          row.id === selected.id
+            ? { ...row, ...updated }
+            : row,
+        ),
+      );
+      setNotice("");
     } catch (error) {
       setNotice(error.message);
     }

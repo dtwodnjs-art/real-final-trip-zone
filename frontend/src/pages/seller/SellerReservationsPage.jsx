@@ -49,7 +49,9 @@ export default function SellerReservationsPage() {
   const updateStatus = async (nextStatus) => {
     if (!selected) return;
     try {
-      await updateSellerReservationStatus(selected.no, nextStatus);
+      const updated = await updateSellerReservationStatus(selected.no, nextStatus);
+      setRows((prev) => prev.map((row) => (row.no === selected.no ? { ...row, ...updated } : row)));
+      setNotice("");
     } catch (error) {
       setNotice(error.message);
     }

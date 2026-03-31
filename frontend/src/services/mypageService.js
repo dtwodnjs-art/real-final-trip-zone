@@ -20,6 +20,25 @@ export async function getMyProfileDetails() {
   return response.details ?? [];
 }
 
+export async function changeMyPassword(nextPassword, confirmPassword) {
+  await patch("/api/auth/password", {
+    newPassword: nextPassword,
+    newPasswordConfirm: confirmPassword,
+  });
+
+  return { ok: true };
+}
+
+export async function withdrawMyAccount() {
+  const session = readAuthSession();
+  if (!session?.userNo) {
+    throw new Error("로그인 정보가 없습니다.");
+  }
+
+  await patch(`/api/users/${session.userNo}/delete`);
+  return { ok: true };
+}
+
 export async function getMyBookings() {
   const response = await get("/api/mypage/bookings");
   return response.items ?? [];
@@ -142,62 +161,32 @@ export async function getMyWishlist() {
 }
 
 export function getMyInquiryThreads() {
-  const session = readAuthSession();
-  if (!session?.userNo) return Promise.resolve([]);
-
-  return get(`/api/inquiry/list/${session.userNo}?page=1&size=100`).then((response) =>
-    (response.dtoList ?? []).map((item) => ({
-      id: item.inquiryNo,
+  return get("/api/mypage/inquiries").then((response) =>
+    (response.items ?? []).map((item) => ({
+      id: item.id,
       title: item.title,
-      type: item.inquiryType,
+      type: item.type,
       status: item.status,
-      bookingNo: "-",
-      lodging: "운영 문의",
-      updatedAt: formatDateValue(item.updDate || item.regDate) || "방금 전",
-      body: item.content ?? "",
+      bookingNo: item.bookingNo ?? "-",
+      lodging: item.lodging ?? "운영 문의",
+      updatedAt: item.updatedAt || "방금 전",
+      body: item.preview ?? "",
     })),
   );
 }
 
 export function getMyInquiryThreadById(threadId) {
-  return Promise.all([
-    get(`/api/inquiry/${threadId}`),
-    get("/api/comment/list?page=1&size=200").catch((error) => {
-      if (error.message === "HTTP 404") {
-        return { dtoList: [] };
-      }
-      throw error;
-    }),
-  ]).then(([inquiry, commentResponse]) => {
-    const comments = (commentResponse.dtoList ?? []).filter(
-      (item) => String(item.inquiryNo) === String(threadId),
-    );
-
-    return {
-      id: inquiry.inquiryNo,
-      title: inquiry.title,
-      type: inquiry.inquiryType,
-      status: inquiry.status,
-      bookingNo: "-",
-      lodging: "운영 문의",
-      updatedAt: formatDateValue(inquiry.updDate || inquiry.regDate) || "방금 전",
-      body: inquiry.content ?? "",
-      messages: [
-        {
-          id: `inquiry-${inquiry.inquiryNo}`,
-          sender: "회원",
-          time: formatDateValue(inquiry.regDate) || "방금 전",
-          body: inquiry.content ?? "",
-        },
-        ...comments.map((item) => ({
-          id: `comment-${item.commentNo}`,
-          sender: "운영팀",
-          time: "답변 도착",
-          body: item.content ?? "",
-        })),
-      ],
-    };
-  });
+  return get(`/api/mypage/inquiries/${threadId}`).then((thread) => ({
+    id: thread.id,
+    title: thread.title,
+    type: thread.type,
+    status: thread.status,
+    bookingNo: thread.bookingNo ?? "-",
+    lodging: thread.lodging ?? "운영 문의",
+    updatedAt: thread.updatedAt || "방금 전",
+    body: thread.body ?? "",
+    messages: thread.messages ?? [],
+  }));
 }
 
 export function createInquiryThread(payload) {
