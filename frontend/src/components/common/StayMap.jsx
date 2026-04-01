@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import L from "leaflet";
-import { MapContainer, Marker, Popup, TileLayer } from "react-leaflet";
+import { MapContainer, Marker, Popup } from "react-leaflet";
+import OpenFreeMapLayer from "./OpenFreeMapLayer";
 
 function buildMarker(label, active = false, single = false) {
   return L.divIcon({
@@ -58,16 +59,7 @@ export default function StayMap({ items, selectedId = null, height = 420, single
           onReady?.(event.target);
         }}
       >
-        <TileLayer
-          attribution='&copy; OpenStreetMap contributors &copy; CARTO'
-          url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager_nolabels/{z}/{x}/{y}{r}.png"
-          subdomains="abcd"
-        />
-        <TileLayer
-          attribution='&copy; OpenStreetMap contributors &copy; CARTO'
-          url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager_only_labels/{z}/{x}/{y}{r}.png"
-          subdomains="abcd"
-        />
+        <OpenFreeMapLayer />
         {points.map((item) => (
           <Marker
             key={item.id}

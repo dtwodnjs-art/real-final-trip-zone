@@ -76,7 +76,9 @@ function mapEventDto(dto) {
   const status = dto.status ?? "DRAFT";
 
   return {
-    id: dto.eventNo,
+    id: `event-${dto.eventNo}`,
+    entityType: "EVENT",
+    entityNo: dto.eventNo,
     title: dto.title ?? `이벤트 ${dto.eventNo}`,
     status,
     statusLabel:
@@ -88,6 +90,33 @@ function mapEventDto(dto) {
     content: dto.content ?? "",
     startDate: dto.startDate ?? "",
     endDate: dto.endDate ?? "",
+  };
+}
+
+function mapCouponDto(dto) {
+  const status = dto.status ?? "INACTIVE";
+  const discountLabel =
+    dto.discountType === "RATE"
+      ? `${Number(dto.discountValue ?? 0)}% 쿠폰`
+      : `${Number(dto.discountValue ?? 0).toLocaleString()}원 쿠폰`;
+
+  return {
+    id: `coupon-${dto.couponNo}`,
+    entityType: "COUPON",
+    entityNo: dto.couponNo,
+    title: dto.couponName ?? `쿠폰 ${dto.couponNo}`,
+    status,
+    statusLabel:
+      status === "ACTIVE" ? "노출중" :
+      status === "EXPIRED" || status === "USED" ? "종료" : "숨김",
+    target: discountLabel,
+    period: formatDateRange(dto.startDate, dto.endDate),
+    content: "",
+    startDate: dto.startDate ?? "",
+    endDate: dto.endDate ?? "",
+    discountType: dto.discountType ?? "AMOUNT",
+    discountValue: dto.discountValue ?? 0,
+    adminUser: dto.adminUser ?? 1,
   };
 }
 
@@ -175,7 +204,7 @@ function mapSellerAssetRows(lodging) {
   }
 
   return images.map((fileName, index) => ({
-    id: `${lodging.id}-${fileName}`,
+    id: `${lodging.id}-${index + 1}-${fileName}`,
     lodgingId: lodging.id,
     lodging: lodging.name,
     type: index === 0 ? "대표 이미지" : "일반 이미지",
@@ -197,6 +226,14 @@ async function getCurrentHostProfile() {
     }
     throw error;
   }
+}
+
+async function requireCurrentHostProfile() {
+  const host = await getCurrentHostProfile();
+  if (!host) {
+    throw new Error("판매자 프로필을 찾을 수 없습니다.");
+  }
+  return host;
 }
 
 export function getDashboardDataSource() {
@@ -245,11 +282,33 @@ export async function updateAdminSellerStatus(hostNo, nextStatus) {
 }
 
 export async function getAdminEvents() {
-  const response = await get("/api/event/list?page=1&size=100");
-  return (response.dtoList ?? []).map(mapEventDto);
+  const [eventResponse, couponRows] = await Promise.all([
+    get("/api/event/list?page=1&size=100"),
+    get("/api/coupon/list").catch(() => []),
+  ]);
+
+  return [
+    ...(eventResponse.dtoList ?? []).map(mapEventDto),
+    ...couponRows.map(mapCouponDto),
+  ];
 }
 
-export async function updateAdminEventStatus(eventId, nextStatus, currentEvent) {
+export async function updateAdminEventStatus(currentEvent, nextStatus) {
+  if (currentEvent.entityType === "COUPON") {
+    await patch(`/api/coupon/${currentEvent.entityNo}`, {
+      adminUser: currentEvent.adminUser,
+      couponName: currentEvent.title,
+      discountType: currentEvent.discountType,
+      discountValue: currentEvent.discountValue,
+      startDate: currentEvent.startDate,
+      endDate: currentEvent.endDate,
+      status: nextStatus === "ONGOING" ? "ACTIVE" : "INACTIVE",
+    });
+
+    const refreshed = await get("/api/coupon/list");
+    return refreshed.map(mapCouponDto).find((item) => item.id === currentEvent.id) ?? null;
+  }
+
   const formData = new FormData();
   formData.append("title", currentEvent.title);
   formData.append("content", currentEvent.content ?? "");
@@ -257,12 +316,27 @@ export async function updateAdminEventStatus(eventId, nextStatus, currentEvent) 
   formData.append("endDate", currentEvent.endDate);
   formData.append("status", nextStatus);
 
-  await put(`/api/event/${eventId}`, formData);
-  const refreshed = await get(`/api/event/${eventId}`);
+  await put(`/api/event/${currentEvent.entityNo}`, formData);
+  const refreshed = await get(`/api/event/${currentEvent.entityNo}`);
   return mapEventDto(refreshed);
 }
 
 export async function saveAdminEvent(eventId, draft, currentEvent) {
+  if (currentEvent.entityType === "COUPON") {
+    await patch(`/api/coupon/${currentEvent.entityNo}`, {
+      adminUser: currentEvent.adminUser,
+      couponName: draft.title,
+      discountType: currentEvent.discountType,
+      discountValue: currentEvent.discountValue,
+      startDate: draft.startDate,
+      endDate: draft.endDate,
+      status: currentEvent.status ?? "INACTIVE",
+    });
+
+    const refreshed = await get("/api/coupon/list");
+    return refreshed.map(mapCouponDto).find((item) => item.id === currentEvent.id) ?? null;
+  }
+
   const formData = new FormData();
   formData.append("title", draft.title);
   formData.append("content", draft.content ?? currentEvent.content ?? "");
@@ -270,8 +344,8 @@ export async function saveAdminEvent(eventId, draft, currentEvent) {
   formData.append("endDate", draft.endDate);
   formData.append("status", currentEvent.status ?? "DRAFT");
 
-  await put(`/api/event/${eventId}`, formData);
-  const refreshed = await get(`/api/event/${eventId}`);
+  await put(`/api/event/${currentEvent.entityNo}`, formData);
+  const refreshed = await get(`/api/event/${currentEvent.entityNo}`);
   return mapEventDto(refreshed);
 }
 
@@ -329,8 +403,7 @@ export function getAdminAuditLogs() {
 }
 
 export async function getSellerLodgings() {
-  const host = await getCurrentHostProfile();
-  if (!host) return [];
+  const host = await requireCurrentHostProfile();
 
   const lodgings = await get("/api/lodgings/list");
   return lodgings
@@ -346,8 +419,7 @@ export async function updateSellerLodgingStatus(lodgingId, nextStatus) {
 }
 
 export async function getSellerReservations() {
-  const host = await getCurrentHostProfile();
-  if (!host) return [];
+  const host = await requireCurrentHostProfile();
 
   const response = await get(`/api/seller/hostlist/${host.hostNo}?page=1&size=100`);
   return (response.dtoList ?? []).map(mapReservationDto);
@@ -376,7 +448,17 @@ export async function updateSellerRoomStatus(roomId, nextStatus, lodgingName) {
 
 export async function getSellerAssets() {
   const lodgings = await getSellerLodgings();
-  return lodgings.flatMap(mapSellerAssetRows);
+  const detailedLodgings = await Promise.all(
+    lodgings.map(async (lodging) => {
+      const detail = await get(`/api/lodgings/${lodging.id}`);
+      return {
+        ...lodging,
+        uploadFileNames: detail.uploadFileNames ?? lodging.uploadFileNames ?? [],
+      };
+    }),
+  );
+
+  return detailedLodgings.flatMap(mapSellerAssetRows);
 }
 
 export async function updateSellerAsset(assetId, patchData) {
@@ -476,12 +558,10 @@ export async function submitSellerApplication(form) {
   return getSellerApplicationDraft();
 }
 
-export async function getSellerMetrics() {
-  const [lodgings, reservations, inquiries] = await Promise.all([
-    getSellerLodgings(),
-    getSellerReservations(),
-    getSellerInquiryRooms().catch(() => []),
-  ]);
+export async function getSellerMetrics(prefetched = {}) {
+  const lodgings = prefetched.lodgings ?? await getSellerLodgings();
+  const reservations = prefetched.reservations ?? await getSellerReservations();
+  const inquiries = prefetched.inquiries ?? await getSellerInquiryRooms();
 
   return [
     { label: "오늘 체크인", value: String(reservations.filter((item) => item.status === "CONFIRMED").length).padStart(2, "0") },
@@ -508,11 +588,21 @@ export async function getAdminDashboardSnapshot() {
 }
 
 export async function getSellerDashboardSnapshot() {
-  const [lodgings, reservations, metrics] = await Promise.all([
-    getSellerLodgings().catch(() => []),
-    getSellerReservations().catch(() => []),
-    getSellerMetrics().catch(() => []),
+  const host = await requireCurrentHostProfile();
+  const lodgingsPromise = get("/api/lodgings/list").then((rows) =>
+    rows.filter((item) => Number(item.hostNo) === Number(host.hostNo)).map(mapSellerLodgingDto),
+  );
+  const reservationsPromise = get(`/api/seller/hostlist/${host.hostNo}?page=1&size=100`).then((response) =>
+    (response.dtoList ?? []).map(mapReservationDto),
+  );
+  const inquiriesPromise = getSellerInquiryRooms();
+
+  const [lodgings, reservations, inquiries] = await Promise.all([
+    lodgingsPromise,
+    reservationsPromise,
+    inquiriesPromise,
   ]);
+  const metrics = await getSellerMetrics({ lodgings, reservations, inquiries });
 
   return {
     sellerTasks: [],

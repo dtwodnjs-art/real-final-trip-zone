@@ -48,7 +48,10 @@ export default function AdminInquiriesPage() {
   const updateStatus = async (nextStatus) => {
     if (!selected) return;
     try {
-      await updateAdminInquiryStatus(selected.id, nextStatus);
+      const updated = await updateAdminInquiryStatus(selected.id, nextStatus);
+      setRows((current) => current.map((row) => (row.id === updated.id ? updated : row)));
+      setSelectedId(updated.id);
+      setNotice("문의 상태를 변경했습니다.");
     } catch (error) {
       setNotice(error.message);
     }

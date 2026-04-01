@@ -54,12 +54,14 @@ export default function SellerDashboardPage() {
   const activeRatio = Math.round((activeLodgings / Math.max(vm.lodgingRows.length, 1)) * 100);
   const priorityRows = vm.reservationRows.slice(0, 2).map((item) => ({
     ...item,
+    key: item.no,
     label:
       item.status === "PENDING"
         ? "결제 대기"
         : item.status === "CONFIRMED"
           ? "체크인 예정"
           : "취소 확인",
+    title: `예약 ${item.no}`,
     meta: `${item.no} · ${item.detail}`,
     actionLabel:
       item.status === "PENDING"

@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
-import { MapContainer, Marker, Popup, TileLayer } from "react-leaflet";
+import { MapContainer, Marker, Popup } from "react-leaflet";
+import OpenFreeMapLayer from "../../components/common/OpenFreeMapLayer";
 import { buildPriceMarkerIcon, buildPriceMeta } from "./lodgingListUtils";
 
 function getMapCenter(rows) {
@@ -108,16 +109,7 @@ export function LodgingResultsLayout({
               zoomControl={false}
               whenReady={(event) => setMapInstance(event.target)}
             >
-              <TileLayer
-                attribution="&copy; OpenStreetMap contributors &copy; CARTO"
-                url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager_nolabels/{z}/{x}/{y}{r}.png"
-                subdomains="abcd"
-              />
-              <TileLayer
-                attribution="&copy; OpenStreetMap contributors &copy; CARTO"
-                url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager_only_labels/{z}/{x}/{y}{r}.png"
-                subdomains="abcd"
-              />
+              <OpenFreeMapLayer />
               {filteredLodgings.map((lodging) => (
                 <Marker
                   key={lodging.id}

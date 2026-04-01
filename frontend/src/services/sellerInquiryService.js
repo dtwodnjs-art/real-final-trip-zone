@@ -7,6 +7,10 @@ let inquiryConnectPromise = null;
 let StompClient = null;
 let SockJSClient = null;
 
+if (typeof globalThis.global === "undefined") {
+  globalThis.global = globalThis;
+}
+
 function getAccessToken() {
   const accessToken = readAuthSession()?.accessToken;
   if (!accessToken) {

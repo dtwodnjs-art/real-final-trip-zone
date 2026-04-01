@@ -10,6 +10,18 @@ const columns = [
   { key: "period", label: "운영 기간" },
 ];
 
+function isVisibleStatus(status) {
+  return status === "ONGOING" || status === "ACTIVE";
+}
+
+function isDraftStatus(status) {
+  return status === "DRAFT";
+}
+
+function isHiddenStatus(status) {
+  return status === "HIDDEN" || status === "INACTIVE" || status === "DELETE";
+}
+
 export default function AdminEventsPage() {
   const [rows, setRows] = useState([]);
   const [selectedEventId, setSelectedEventId] = useState(null);
@@ -73,7 +85,7 @@ export default function AdminEventsPage() {
   const updateStatus = async (nextStatus) => {
     if (!selectedEvent) return;
     try {
-      const updatedEvent = await updateAdminEventStatus(selectedEvent.id, nextStatus, selectedEvent);
+      const updatedEvent = await updateAdminEventStatus(selectedEvent, nextStatus);
       setRows((current) => current.map((row) => (row.id === updatedEvent.id ? updatedEvent : row)));
       setNotice("이벤트 상태를 변경했습니다.");
     } catch (error) {
@@ -98,7 +110,7 @@ export default function AdminEventsPage() {
         <div className="dash-page-header-copy">
           <p className="eyebrow">이벤트 운영</p>
           <h1>이벤트 · 쿠폰 관리</h1>
-          <p>노출 {rows.filter((r) => r.status === "ONGOING").length}건 · 초안 {rows.filter((r) => r.status === "DRAFT").length}건 · 숨김 {rows.filter((r) => r.status === "HIDDEN").length}건</p>
+          <p>노출 {rows.filter((r) => isVisibleStatus(r.status)).length}건 · 초안 {rows.filter((r) => isDraftStatus(r.status)).length}건 · 숨김 {rows.filter((r) => isHiddenStatus(r.status)).length}건</p>
           {notice ? <p>{notice}</p> : null}
         </div>
       </div>

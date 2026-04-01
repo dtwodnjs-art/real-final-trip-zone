@@ -1,5 +1,9 @@
 import { Link } from "react-router-dom";
 
+function getFocusRowKey(item, index) {
+  return item.key ?? `${item.title ?? item.label ?? "focus"}-${item.to}-${index}`;
+}
+
 function Sparkline({ values, filled = true }) {
   if (!values || values.length < 2) return null;
   const min = Math.min(...values);
@@ -97,8 +101,8 @@ export function DashboardHero({
             <span>{insightTitle}</span>
           </div>
           <div className="opsdash-focus-list">
-            {insightRows.map((item) => (
-              <Link key={`${item.title}-${item.to}`} to={item.to} className="opsdash-focus-row">
+            {insightRows.map((item, index) => (
+              <Link key={getFocusRowKey(item, index)} to={item.to} className="opsdash-focus-row">
                 <div className="opsdash-focus-main">
                   <div className="opsdash-focus-meta">
                     {item.label ? <span>{item.label}</span> : null}
@@ -152,8 +156,8 @@ export function DashboardMetricStrip({ items, label, className = "" }) {
 export function DashboardFocusList({ rows, compact = false }) {
   return (
     <div className={`opsdash-focus-list${compact ? " is-compact" : ""}`}>
-      {rows.map((item) => (
-        <Link key={`${item.title}-${item.to}`} to={item.to} className={`opsdash-focus-row${compact ? " is-compact" : ""}`}>
+      {rows.map((item, index) => (
+        <Link key={getFocusRowKey(item, index)} to={item.to} className={`opsdash-focus-row${compact ? " is-compact" : ""}`}>
           <div className="opsdash-focus-main">
             <div className="opsdash-focus-meta">
               {item.label ? <span>{item.label}</span> : null}
