@@ -36,6 +36,14 @@ function formatDateRange(startDate, endDate) {
   return `${String(start.getMonth() + 1).padStart(2, "0")}.${String(start.getDate()).padStart(2, "0")} - ${String(end.getMonth() + 1).padStart(2, "0")}.${String(end.getDate()).padStart(2, "0")}`;
 }
 
+function extractRows(response) {
+  if (Array.isArray(response)) {
+    return response;
+  }
+
+  return response?.dtoList ?? [];
+}
+
 function mapEnabledStatus(enabled) {
   return enabled === "1" || enabled === "true" || enabled === true ? "ACTIVE" : "BLOCKED";
 }
@@ -221,8 +229,22 @@ async function getCurrentHostProfile() {
   try {
     return await get("/api/mypage/host-profile");
   } catch (error) {
-    if (error.message?.includes("호스트 신청 정보가 없습니다.") || error.message?.includes("HTTP 404")) {
+    if (error.message?.includes("HTTP 403")) {
       return null;
+    }
+
+    if (error.message?.includes("호스트 신청 정보가 없습니다.")) {
+      return null;
+    }
+
+    if (error.message?.includes("HTTP 404")) {
+      try {
+        const response = await get("/api/hosts?page=1&size=100");
+        const hostRows = extractRows(response);
+        return hostRows.find((item) => Number(item.userNo) === Number(session.userNo)) ?? null;
+      } catch {
+        return null;
+      }
     }
     throw error;
   }
@@ -250,7 +272,7 @@ export function getSellerTasks() {
 
 export async function getAdminUsers() {
   const response = await get("/api/admin/admin/userlist?page=1&size=100");
-  return (response.dtoList ?? []).map(mapAdminUserDto);
+  return extractRows(response).map(mapAdminUserDto);
 }
 
 export async function updateAdminUserStatus(userNo, nextStatus) {
@@ -262,7 +284,7 @@ export async function updateAdminUserStatus(userNo, nextStatus) {
 
 export async function getAdminSellers() {
   const response = await get("/api/hosts?page=1&size=100");
-  return (response.dtoList ?? []).map(mapHostProfileDto);
+  return extractRows(response).map(mapHostProfileDto);
 }
 
 export async function updateAdminSellerStatus(hostNo, nextStatus) {
@@ -288,7 +310,7 @@ export async function getAdminEvents() {
   ]);
 
   return [
-    ...(eventResponse.dtoList ?? []).map(mapEventDto),
+    ...extractRows(eventResponse).map(mapEventDto),
     ...couponRows.map(mapCouponDto),
   ];
 }
@@ -593,9 +615,9 @@ export async function getSellerDashboardSnapshot() {
     rows.filter((item) => Number(item.hostNo) === Number(host.hostNo)).map(mapSellerLodgingDto),
   );
   const reservationsPromise = get(`/api/seller/hostlist/${host.hostNo}?page=1&size=100`).then((response) =>
-    (response.dtoList ?? []).map(mapReservationDto),
+    extractRows(response).map(mapReservationDto),
   );
-  const inquiriesPromise = getSellerInquiryRooms();
+  const inquiriesPromise = getSellerInquiryRooms().catch(() => []);
 
   const [lodgings, reservations, inquiries] = await Promise.all([
     lodgingsPromise,

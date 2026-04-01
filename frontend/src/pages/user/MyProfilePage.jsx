@@ -1,9 +1,8 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import MyPageLayout from "../../components/user/MyPageLayout";
 import { getProfileFieldGroups } from "../../features/mypage/mypageViewModels";
 import { clearAuthSession } from "../../utils/authSession";
-import { useEffect } from "react";
 import {
   changeMyPassword,
   getMyProfileDetails,

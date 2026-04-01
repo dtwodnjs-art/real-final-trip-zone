@@ -18,8 +18,7 @@ export default function Header() {
   }, [location.pathname, location.search]);
 
   useEffect(() => {
-    const nextSession = readAuthSession();
-    if (nextSession?.role !== "ROLE_USER") {
+    if (session?.role !== "ROLE_USER") {
       setHomeSnapshot(null);
       return undefined;
     }
@@ -41,7 +40,7 @@ export default function Header() {
     return () => {
       cancelled = true;
     };
-  }, [location.pathname, location.search]);
+  }, [location.pathname, location.search, session?.role]);
 
   useEffect(() => {
     if (!menuOpen) return undefined;

@@ -79,7 +79,7 @@ function buildHighlights(dto) {
 function buildImageUrl(fileName) {
   if (!fileName) return FALLBACK_IMAGE;
   if (/^https?:\/\//i.test(fileName)) return fileName;
-  return `http://100.96.110.114:8080/api/lodgings/view/${encodeURIComponent(fileName)}`;
+  return `${getApiBaseUrl()}/api/lodgings/view/${encodeURIComponent(fileName)}`;
 }
 
 function buildReviewImageUrl(value) {

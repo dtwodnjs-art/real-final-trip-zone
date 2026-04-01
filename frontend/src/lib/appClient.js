@@ -1,9 +1,35 @@
 import { clearAuthSession, readAuthSession, writeAuthSession } from "../features/auth/authSession";
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "http://100.96.110.114:8080";
+function resolveDefaultApiBaseUrl() {
+  if (typeof window !== "undefined") {
+    const hostname = window.location.hostname;
+    if (hostname === "localhost" || hostname === "127.0.0.1") {
+      return "http://localhost:8080";
+    }
+  }
+
+  return "http://100.96.110.114:8080";
+}
+
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? resolveDefaultApiBaseUrl();
+const APP_DATA_SOURCE = "http";
 
 export function getApiBaseUrl() {
   return API_BASE_URL;
+}
+
+export function getAppDataSource() {
+  return APP_DATA_SOURCE;
+}
+
+export function isMockDataSource() {
+  return APP_DATA_SOURCE === "mock";
+}
+
+export function assertMockDataSource() {
+  if (!isMockDataSource()) {
+    throw new Error("Mock data source is not configured.");
+  }
 }
 
 function buildUrl(path) {
@@ -89,7 +115,15 @@ async function request(path, options = {}, retry = true) {
   }
 
   if (response.status === 204) return null;
-  return response.json();
+  const rawText = await response.text();
+  if (!rawText) return null;
+
+  const contentType = response.headers.get("content-type") ?? "";
+  if (contentType.includes("application/json")) {
+    return JSON.parse(rawText);
+  }
+
+  return rawText;
 }
 
 export function get(path, options = {}) {

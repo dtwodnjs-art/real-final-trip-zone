@@ -1,11 +1,12 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { authProviders, defaultLoginForm } from "../../data/authData";
+import { authProviders, defaultLoginForm, demoLoginAccounts } from "../../data/authData";
 import {
   getAuthProviderMark,
   getKakaoAuthUrl,
   getNaverAuthUrl,
   getSelectedAuthProvider,
+  isGoogleLoginAvailable,
   loginWithCredentials,
   loginWithGooglePopup,
   loginWithSessionPayload,
@@ -18,6 +19,7 @@ export default function LoginPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const selectedProvider = getSelectedAuthProvider(form.provider);
   const canSubmit = form.email.trim() && form.password.trim();
+  const socialProviders = authProviders.filter((provider) => provider.key !== "LOCAL" && (provider.key !== "GOOGLE" || isGoogleLoginAvailable()));
 
   const commitSession = (payload) => {
     navigate(loginWithSessionPayload(payload));
@@ -29,7 +31,6 @@ export default function LoginPage() {
 
     setErrorMessage("");
     setIsSubmitting(true);
-
     try {
       const session = await loginWithCredentials(form);
       commitSession(session);
@@ -41,10 +42,7 @@ export default function LoginPage() {
   };
 
   const handleSocialLogin = async (providerKey) => {
-    if (isSubmitting) return;
-
     setErrorMessage("");
-    setIsSubmitting(true);
 
     try {
       if (providerKey === "KAKAO") {
@@ -57,51 +55,34 @@ export default function LoginPage() {
         return;
       }
 
-      const session = await loginWithGooglePopup();
-      commitSession(session);
+      if (providerKey === "GOOGLE") {
+        const session = await loginWithGooglePopup();
+        commitSession(session);
+        return;
+      }
+
+      throw new Error("지원하지 않는 소셜 로그인입니다.");
     } catch (error) {
       setErrorMessage(error.message || "소셜 로그인에 실패했습니다.");
-    } finally {
-      setIsSubmitting(false);
     }
   };
 
   return (
     <div className="container page-stack">
       <section className="auth-shell auth-shell-compact auth-shell-login">
-        <div className="auth-copy">
-          <div
-            className="auth-copy-visual"
-            style={{
-              backgroundImage:
-                "url(https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1400&q=80)",
-            }}
-          >
-            <div className="auth-copy-overlay">
-              <p className="eyebrow">로그인</p>
-              <h1>예약 내역과 혜택을 바로 이어서 확인</h1>
-              <p>이메일 로그인과 간편 로그인을 같은 화면에서 빠르게 선택할 수 있습니다.</p>
-              <div className="auth-copy-points">
-                <span>예약 내역 확인</span>
-                <span>찜한 숙소 이어보기</span>
-                <span>쿠폰/마일리지 확인</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
         <form className="auth-panel auth-panel-strong" onSubmit={handleSubmit}>
           <div className="auth-panel-header">
             <strong>이메일 로그인</strong>
-            <span>회원 정보로 바로 로그인</span>
+            <span>회원 정보로 바로 로그인하세요.</span>
           </div>
           <label className="auth-field">
-            <span>이메일</span>
+            <span>아이디 또는 이메일</span>
             <input
               className="auth-input"
-              type="email"
+              type="text"
+              autoComplete="username"
               value={form.email}
-              placeholder="tripzone@example.com"
+              placeholder="tripzone@example.com 또는 admin"
               onChange={(event) => setForm((current) => ({ ...current, email: event.target.value }))}
             />
           </label>
@@ -111,6 +92,7 @@ export default function LoginPage() {
             <input
               className="auth-input"
               type="password"
+              autoComplete="current-password"
               value={form.password}
               placeholder="비밀번호를 입력하세요"
               onChange={(event) => setForm((current) => ({ ...current, password: event.target.value }))}
@@ -136,7 +118,7 @@ export default function LoginPage() {
             </div>
           </div>
 
-          {errorMessage ? <p className="auth-feedback-message" role="alert">{errorMessage}</p> : null}
+          {errorMessage ? <p className="auth-error-message">{errorMessage}</p> : null}
 
           <button className={`primary-button booking-card-button${canSubmit ? "" : " is-disabled"}`} type="submit" disabled={!canSubmit || isSubmitting}>
             {isSubmitting ? "로그인 중..." : "로그인"}
@@ -147,22 +129,19 @@ export default function LoginPage() {
           </div>
 
           <div className="auth-provider-stack">
-            {authProviders
-              .filter((provider) => provider.key !== "LOCAL")
-              .map((provider) => (
-                <button
-                  key={provider.key}
-                  type="button"
-                  className={`auth-provider-line auth-provider-${provider.key.toLowerCase()}${selectedProvider.key === provider.key ? " is-active" : ""}`}
-                  disabled={isSubmitting}
-                  onClick={() => handleSocialLogin(provider.key)}
-                >
-                  <span className="auth-provider-mark" aria-hidden="true">
-                    {getAuthProviderMark(provider.key)}
-                  </span>
-                  <strong>{provider.label}로 계속하기</strong>
-                </button>
-              ))}
+            {socialProviders.map((provider) =>
+              <button
+                key={provider.key}
+                type="button"
+                className={`auth-provider-line auth-provider-${provider.key.toLowerCase()}${selectedProvider.key === provider.key ? " is-active" : ""}`}
+                onClick={() => handleSocialLogin(provider.key)}
+              >
+                <span className="auth-provider-mark" aria-hidden="true">
+                  {getAuthProviderMark(provider.key)}
+                </span>
+                <strong>{provider.label}로 계속하기</strong>
+              </button>,
+            )}
           </div>
 
           <div className="auth-links">
@@ -172,6 +151,34 @@ export default function LoginPage() {
             </Link>
           </div>
         </form>
+
+        <aside className="auth-demo-panel auth-demo-panel-side">
+          <div className="auth-demo-head">
+            <strong>테스트 계정</strong>
+            <span>로컬 백엔드에서 바로 로그인되는 실계정</span>
+          </div>
+          <p className="auth-demo-copy">클릭하면 실제 로그인 가능한 아이디와 비밀번호를 채워 넣습니다.</p>
+          <div className="auth-demo-list">
+            {demoLoginAccounts.map((account) => (
+              <button
+                key={account.key}
+                type="button"
+                className="auth-demo-account"
+                onClick={() =>
+                  setForm((current) => ({
+                    ...current,
+                    provider: "LOCAL",
+                    email: account.email,
+                    password: account.password,
+                  }))
+                }
+              >
+                <strong>{account.label}</strong>
+                <span>{account.email}</span>
+              </button>
+            ))}
+          </div>
+        </aside>
       </section>
     </div>
   );

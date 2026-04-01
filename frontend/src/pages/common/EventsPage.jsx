@@ -72,15 +72,20 @@ export default function EventsPage() {
     let cancelled = false;
 
     async function loadCoupons() {
+      if (!session?.accessToken) {
+        if (cancelled) return;
+        setClaimedCoupons([]);
+        setCouponCatalog([]);
+        setCouponNotice("로그인 후 실제 쿠폰을 발급할 수 있습니다.");
+        return;
+      }
+
       try {
-        const [issuedRows, catalogRows] = await Promise.all([
-          session?.accessToken ? fetchMyCoupons() : Promise.resolve([]),
-          fetchCouponCatalog(),
-        ]);
+        const [issuedRows, catalogRows] = await Promise.all([fetchMyCoupons(), fetchCouponCatalog()]);
         if (cancelled) return;
         setClaimedCoupons(issuedRows);
         setCouponCatalog(catalogRows);
-        setCouponNotice(session?.accessToken ? "" : "로그인 후 실제 쿠폰을 발급할 수 있습니다.");
+        setCouponNotice("");
       } catch (error) {
         console.error("Failed to load event coupons.", error);
         setCouponNotice("쿠폰 목록을 불러오지 못했습니다.");

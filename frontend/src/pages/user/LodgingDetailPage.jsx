@@ -86,7 +86,7 @@ export default function LodgingDetailPage() {
   const reviewSectionRef = useRef(null);
   const inquiryThreadRef = useRef(null);
   const inquiryUnsubscribeRef = useRef(() => {});
-  const authSession = readAuthSession();
+  const authSession = useMemo(() => readAuthSession(), []);
   const roomBaseMeta = getRoomMeta(selectedRoom?.name ?? "");
   const canWriteReview = useMemo(
     () => canWriteLodgingReview(authSession, myBookingRows, lodging?.id ?? 0),
@@ -160,6 +160,11 @@ export default function LodgingDetailPage() {
     let cancelled = false;
 
     async function loadMyBookings() {
+      if (!authSession?.accessToken) {
+        setMyBookingRows([]);
+        return;
+      }
+
       try {
         const rows = await getMyBookings();
         if (cancelled) return;
@@ -174,7 +179,7 @@ export default function LodgingDetailPage() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [authSession?.accessToken]);
 
   useEffect(() => {
     if (!roomOptions.length) return;
@@ -235,7 +240,7 @@ export default function LodgingDetailPage() {
       inquiryUnsubscribeRef.current();
       inquiryUnsubscribeRef.current = () => {};
     };
-  }, [authSession, isInquiryOpen, lodging, sellerContact.messages]);
+  }, [authSession?.userNo, isInquiryOpen, lodging?.id, sellerContact.messages]);
 
   useEffect(() => {
     if (!isInquiryOpen) return undefined;

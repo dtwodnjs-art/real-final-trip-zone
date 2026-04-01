@@ -1,6 +1,8 @@
 import { del, get, patch, post } from "../lib/appClient";
 import { readAuthSession } from "../features/auth/authSession";
 
+let myCouponSnapshot = [];
+
 // Current backend note:
 // Booking/payment can adapt to current backend DTOs.
 // Inquiry must keep design-doc target shape first:
@@ -46,7 +48,10 @@ export async function getMyBookings() {
 
 export async function getMyBookingById(bookingId) {
   const rows = await getMyBookings();
-  return rows.find((item) => String(item.bookingId) === String(bookingId)) ?? null;
+  return rows.find((item) =>
+    String(item.bookingId) === String(bookingId) ||
+    String(item.bookingNo) === String(bookingId)
+  ) ?? null;
 }
 
 export async function getMyPayments() {
@@ -56,7 +61,10 @@ export async function getMyPayments() {
 
 export async function getMyPaymentByBookingId(bookingId) {
   const rows = await getMyPayments();
-  return rows.find((item) => String(item.bookingId) === String(bookingId)) ?? null;
+  return rows.find((item) =>
+    String(item.bookingId) === String(bookingId) ||
+    String(item.bookingNo) === String(bookingId)
+  ) ?? null;
 }
 
 function resolveCouponTarget(name = "") {
@@ -139,7 +147,13 @@ export async function fetchCouponCatalog() {
 
 export async function fetchMyCoupons() {
   const response = await get("/api/usercoupon/list?page=1&size=100");
-  return (response.dtoList ?? []).map(mapUserCouponDto);
+  const rows = (response.dtoList ?? []).map(mapUserCouponDto);
+  myCouponSnapshot = rows;
+  return rows;
+}
+
+export function getMyCoupons() {
+  return myCouponSnapshot;
 }
 
 export async function claimMyCoupon(coupon) {

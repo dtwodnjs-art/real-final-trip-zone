@@ -3,20 +3,30 @@ import { post } from "../../lib/appClient";
 import { clearAuthSession, readAuthSession, writeAuthSession } from "./authSession";
 
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID ?? "";
-const KAKAO_CLIENT_ID = import.meta.env.VITE_KAKAO_CLIENT_ID ?? "";
-const NAVER_CLIENT_ID = import.meta.env.VITE_NAVER_CLIENT_ID ?? "";
-const KAKAO_REDIRECT_URI =
-  import.meta.env.VITE_KAKAO_REDIRECT_URI ?? "http://localhost:5173/auth/kakao/callback";
-const NAVER_REDIRECT_URI =
-  import.meta.env.VITE_NAVER_REDIRECT_URI ?? "http://localhost:5173/auth/naver/callback";
-let googleScriptPromise = null;
-let googleInitialized = false;
-let googleLoginPromise = null;
-let googleLoginHandlers = null;
+const KAKAO_CLIENT_ID = import.meta.env.VITE_KAKAO_CLIENT_ID ?? "bccf0774846b742756b3ff66558e4269";
+const NAVER_CLIENT_ID = import.meta.env.VITE_NAVER_CLIENT_ID ?? "PqkeWT1NEiTtIXw12Rc4";
+const LOCAL_SOCIAL_ORIGIN = "http://localhost:5173";
 
-export function getSelectedAuthProvider(providerKey) {
-  return authProviders.find((provider) => provider.key === providerKey) ?? authProviders[0];
+function resolveAppOrigin() {
+  if (import.meta.env.VITE_APP_ORIGIN) {
+    return import.meta.env.VITE_APP_ORIGIN;
+  }
+
+  if (typeof window === "undefined") {
+    return LOCAL_SOCIAL_ORIGIN;
+  }
+
+  const { hostname } = window.location;
+  if (hostname === "localhost" || hostname === "127.0.0.1") {
+    return LOCAL_SOCIAL_ORIGIN;
+  }
+
+  return window.location.origin;
 }
+
+const APP_ORIGIN = resolveAppOrigin();
+const KAKAO_REDIRECT_URI = import.meta.env.VITE_KAKAO_REDIRECT_URI ?? `${APP_ORIGIN}/auth/kakao/callback`;
+const NAVER_REDIRECT_URI = import.meta.env.VITE_NAVER_REDIRECT_URI ?? `${APP_ORIGIN}/auth/naver/callback`;
 
 function getLandingPath(roleNames = []) {
   if (roleNames.includes("ROLE_ADMIN")) return "/admin";
@@ -24,24 +34,20 @@ function getLandingPath(roleNames = []) {
   return "/";
 }
 
-export function createAuthSessionPayload({ name, email, provider, role, landingTo }) {
-  return {
-    name,
-    email,
-    provider,
-    role,
-    landingTo,
-    reviewEligibleLodgingIds: [1, 2, 3],
-  };
+export function getSelectedAuthProvider(providerKey) {
+  return authProviders.find((provider) => provider.key === providerKey) ?? authProviders[0];
 }
 
-export function createAuthSessionPayloadFromResponse(response, fallbackEmail, provider = "LOCAL") {
-  const roleNames = response.roleNames ?? [];
+export function isGoogleLoginAvailable() {
+  return Boolean(GOOGLE_CLIENT_ID);
+}
 
+export function createAuthSessionPayloadFromResponse(response, email, provider = "LOCAL") {
+  const roleNames = response.roleNames ?? [];
   return {
     userNo: response.userNo,
     name: response.userName,
-    email: fallbackEmail,
+    email,
     loginId: response.loginId,
     provider,
     role: roleNames[0] ?? "ROLE_USER",
@@ -70,7 +76,7 @@ export async function loginWithCredentials(form) {
 }
 
 export async function signupWithCredentials(form) {
-  return post("/api/auth/register", {
+  await post("/api/auth/register", {
     loginId: form.email.trim(),
     password: form.password,
     userName: form.name.trim(),
@@ -79,29 +85,11 @@ export async function signupWithCredentials(form) {
   });
 }
 
-export function createSocialSession(provider) {
-  return createAuthSessionPayload({
-    name: `${provider.label} 회원`,
-    email: `${provider.key.toLowerCase()}@tripzone.social`,
-    provider: provider.key,
-    role: "ROLE_USER",
-    landingTo: "/",
-  });
-}
-
 export function getKakaoAuthUrl() {
-  if (!KAKAO_CLIENT_ID) {
-    throw new Error("Kakao client id is not configured.");
-  }
-
   return `https://kauth.kakao.com/oauth/authorize?client_id=${encodeURIComponent(KAKAO_CLIENT_ID)}&redirect_uri=${encodeURIComponent(KAKAO_REDIRECT_URI)}&response_type=code`;
 }
 
 export function getNaverAuthUrl() {
-  if (!NAVER_CLIENT_ID) {
-    throw new Error("Naver client id is not configured.");
-  }
-
   const state = crypto.randomUUID();
   window.sessionStorage.setItem("tripzone-naver-state", state);
   return `https://nid.naver.com/oauth2.0/authorize?response_type=code&client_id=${encodeURIComponent(NAVER_CLIENT_ID)}&redirect_uri=${encodeURIComponent(NAVER_REDIRECT_URI)}&state=${encodeURIComponent(state)}`;
@@ -118,21 +106,15 @@ export async function loginWithSocialCode(provider, code, state) {
 }
 
 export async function loginWithGoogleIdToken(idToken) {
+  if (!GOOGLE_CLIENT_ID) {
+    throw new Error("구글 로그인 설정이 아직 연결되지 않았습니다.");
+  }
   const response = await post("/api/auth/google", { idToken });
   return createAuthSessionPayloadFromResponse(response, "google@tripzone.social", "GOOGLE");
 }
 
 export function loadGoogleScript() {
-  if (googleScriptPromise) {
-    return googleScriptPromise;
-  }
-
-  googleScriptPromise = new Promise((resolve, reject) => {
-    if (!GOOGLE_CLIENT_ID) {
-      reject(new Error("Google client id is not configured."));
-      return;
-    }
-
+  return new Promise((resolve, reject) => {
     if (window.google?.accounts?.id) {
       resolve(window.google);
       return;
@@ -151,76 +133,36 @@ export function loadGoogleScript() {
     script.defer = true;
     script.dataset.googleIdentity = "true";
     script.onload = () => resolve(window.google);
-    script.onerror = () => reject(new Error("Google login script could not be loaded."));
+    script.onerror = reject;
     document.head.appendChild(script);
   });
-
-  return googleScriptPromise;
-}
-
-function resetGoogleLoginHandlers() {
-  googleLoginPromise = null;
-  googleLoginHandlers = null;
-}
-
-function ensureGoogleInitialized(google) {
-  if (googleInitialized) {
-    return;
-  }
-
-  google.accounts.id.initialize({
-    client_id: GOOGLE_CLIENT_ID,
-    callback: async (response) => {
-      const handlers = googleLoginHandlers;
-      resetGoogleLoginHandlers();
-
-      if (!handlers) {
-        return;
-      }
-
-      try {
-        const session = await loginWithGoogleIdToken(response.credential);
-        handlers.resolve(session);
-      } catch (error) {
-        handlers.reject(error);
-      }
-    },
-  });
-
-  googleInitialized = true;
 }
 
 export async function loginWithGooglePopup() {
-  if (googleLoginPromise) {
-    return googleLoginPromise;
+  if (!GOOGLE_CLIENT_ID) {
+    throw new Error("구글 로그인 설정이 아직 연결되지 않았습니다.");
   }
-
   const google = await loadGoogleScript();
-  ensureGoogleInitialized(google);
 
-  googleLoginPromise = new Promise((resolve, reject) => {
-    googleLoginHandlers = { resolve, reject };
+  return new Promise((resolve, reject) => {
+    google.accounts.id.initialize({
+      client_id: GOOGLE_CLIENT_ID,
+      callback: async (response) => {
+        try {
+          const session = await loginWithGoogleIdToken(response.credential);
+          resolve(session);
+        } catch (error) {
+          reject(error);
+        }
+      },
+    });
 
-    google.accounts.id.cancel?.();
     google.accounts.id.prompt((notification) => {
-      if (!googleLoginHandlers) {
-        return;
-      }
-
-      if (notification.isNotDisplayed?.()) {
-        resetGoogleLoginHandlers();
+      if (notification.isNotDisplayed?.() || notification.isSkippedMoment?.()) {
         reject(new Error("Google 로그인 창을 열 수 없습니다. 브라우저의 FedCM 또는 서드파티 로그인 설정을 확인하세요."));
-        return;
-      }
-
-      if (notification.isSkippedMoment?.()) {
-        resetGoogleLoginHandlers();
-        reject(new Error("Google 로그인 요청이 취소되었거나 현재 브라우저에서 차단되었습니다."));
       }
     });
   });
-
-  return googleLoginPromise;
 }
 
 export async function logoutCurrentSession() {
@@ -238,16 +180,6 @@ export async function logoutCurrentSession() {
   } finally {
     clearAuthSession();
   }
-}
-
-export function createDefaultLocalSession(form) {
-  return createAuthSessionPayload({
-    name: form.email.split("@")[0] || "tripzone",
-    email: form.email,
-    provider: form.provider,
-    role: "ROLE_USER",
-    landingTo: "/",
-  });
 }
 
 export function getMembershipLabel(session) {

@@ -92,6 +92,7 @@ export default function AppRouter() {
           <Route path="/my/membership" element={<RequireRole allowedRoles={["ROLE_USER"]}><MyMembershipPage /></RequireRole>} />
           <Route path="/my/seller-apply" element={<RequireRole allowedRoles={["ROLE_USER"]}><MySellerApplyPage /></RequireRole>} />
           <Route path="/seller" element={<RequireRole allowedRoles={["ROLE_HOST"]}><SellerDashboardPage /></RequireRole>} />
+          <Route path="/seller/apply" element={<Navigate to="/my/seller-apply" replace />} />
           <Route path="/seller/lodgings" element={<RequireRole allowedRoles={["ROLE_HOST"]}><SellerLodgingsPage /></RequireRole>} />
           <Route path="/seller/rooms" element={<RequireRole allowedRoles={["ROLE_HOST"]}><SellerRoomsPage /></RequireRole>} />
           <Route path="/seller/assets" element={<RequireRole allowedRoles={["ROLE_HOST"]}><SellerAssetsPage /></RequireRole>} />

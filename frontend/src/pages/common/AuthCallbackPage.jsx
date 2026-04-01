@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { loginWithSessionPayload, loginWithSocialCode } from "../../features/auth/authViewModels";
 
@@ -13,12 +13,14 @@ export default function AuthCallbackPage() {
   const navigate = useNavigate();
   const [errorMessage, setErrorMessage] = useState("");
   const provider = useMemo(() => getProviderFromPath(location.pathname), [location.pathname]);
+  const handledAttemptRef = useRef("");
 
   useEffect(() => {
     const searchParams = new URLSearchParams(location.search);
     const code = searchParams.get("code");
     const state = searchParams.get("state");
     const error = searchParams.get("error");
+    const attemptKey = `${provider ?? "UNKNOWN"}:${code ?? ""}:${state ?? ""}`;
 
     if (!provider) {
       setErrorMessage("지원하지 않는 소셜 로그인 경로입니다.");
@@ -34,6 +36,11 @@ export default function AuthCallbackPage() {
       setErrorMessage("인가 코드가 없습니다.");
       return;
     }
+
+    if (handledAttemptRef.current === attemptKey) {
+      return;
+    }
+    handledAttemptRef.current = attemptKey;
 
     if (provider === "NAVER") {
       const savedState = window.sessionStorage.getItem("tripzone-naver-state");

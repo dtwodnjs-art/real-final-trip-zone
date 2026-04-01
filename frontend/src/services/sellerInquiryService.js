@@ -6,6 +6,7 @@ let inquiryClient = null;
 let inquiryConnectPromise = null;
 let StompClient = null;
 let SockJSClient = null;
+let inquiryClientToken = null;
 
 if (typeof globalThis.global === "undefined") {
   globalThis.global = globalThis;
@@ -21,8 +22,17 @@ function getAccessToken() {
 }
 
 async function ensureInquirySocketClient() {
-  if (inquiryClient?.connected) {
+  const accessToken = getAccessToken();
+
+  if (inquiryClient?.connected && inquiryClientToken === accessToken) {
     return inquiryClient;
+  }
+
+  if (inquiryClient && inquiryClientToken !== accessToken) {
+    inquiryClient.deactivate();
+    inquiryClient = null;
+    inquiryConnectPromise = null;
+    inquiryClientToken = null;
   }
 
   if (inquiryConnectPromise) {
@@ -38,11 +48,12 @@ async function ensureInquirySocketClient() {
   inquiryClient = new StompClient({
     webSocketFactory: () => new SockJSClient(`${getApiBaseUrl()}/ws`),
     connectHeaders: {
-      Authorization: `Bearer ${getAccessToken()}`,
+      Authorization: `Bearer ${accessToken}`,
     },
     reconnectDelay: 5000,
     debug: () => {},
   });
+  inquiryClientToken = accessToken;
 
   inquiryConnectPromise = new Promise((resolve, reject) => {
     inquiryClient.onConnect = () => {
@@ -52,10 +63,14 @@ async function ensureInquirySocketClient() {
     };
     inquiryClient.onWebSocketError = () => {
       inquiryConnectPromise = null;
+      inquiryClient = null;
+      inquiryClientToken = null;
       reject(new Error("문의 실시간 연결에 실패했습니다."));
     };
     inquiryClient.onStompError = (frame) => {
       inquiryConnectPromise = null;
+      inquiryClient = null;
+      inquiryClientToken = null;
       reject(new Error(frame.headers.message || "문의 실시간 연결에 실패했습니다."));
     };
   });
