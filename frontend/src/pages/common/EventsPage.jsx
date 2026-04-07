@@ -1,39 +1,40 @@
-import { useEffect, useState } from "react";
-import { Link, useSearchParams } from "react-router-dom";
-import { eventBanners, promoBanners } from "../../data/homeData";
+import { useEffect, useMemo, useState } from "react";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import { promoBanners } from "../../data/homeData";
 import { readAuthSession } from "../../features/auth/authSession";
-import { fetchLiveEvents } from "../../services/eventService";
+import { toUserFacingErrorMessage } from "../../lib/appClient";
+import { fetchMyCoupons, claimMyCoupon } from "../../services/mypageService";
+import { fetchLiveCoupons, fetchLiveEvents } from "../../services/eventService";
 
 export default function EventsPage() {
+  const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const [liveEvents, setLiveEvents] = useState([]);
+  const [liveCoupons, setLiveCoupons] = useState([]);
+  const [myCouponNames, setMyCouponNames] = useState([]);
   const [eventNotice, setEventNotice] = useState("");
+  const [actionNotice, setActionNotice] = useState("");
+  const [claimingCouponId, setClaimingCouponId] = useState(null);
   const isLoggedIn = Boolean(readAuthSession()?.accessToken);
-  const couponRows = eventBanners.map((item) => ({
-    ...item,
-    entityType: "COUPON",
-    heroEyebrow: item.heroEyebrow ?? "Coupon Benefit",
-    heroMeta: item.heroMeta ?? item.date,
-    detailTitle: item.detailTitle ?? item.title,
-    detailCopy: item.detailCopy ?? item.subtitle,
-    imageUrl: item.image,
-    periodLabel: item.date,
-    ctaHref: isLoggedIn ? "/my/coupons" : "/login",
-    ctaLabel: isLoggedIn ? "쿠폰함 보기" : "로그인 후 쿠폰 확인",
-  }));
-  const promoRows = [...liveEvents, ...couponRows];
+  const promoRows = useMemo(() => [...liveEvents, ...liveCoupons], [liveCoupons, liveEvents]);
   const selectedEventId = searchParams.get("event");
   const selectedEvent = promoRows.find((item) => item.id === selectedEventId) ?? null;
+  const hasClaimedSelectedCoupon =
+    selectedEvent?.entityType === "COUPON" &&
+    myCouponNames.includes(selectedEvent.couponName ?? selectedEvent.title);
 
   useEffect(() => {
     let cancelled = false;
 
     async function loadEvents() {
       try {
-        const rows = await fetchLiveEvents();
+        const [eventRows, couponRows] = await Promise.all([fetchLiveEvents(), fetchLiveCoupons()]);
         if (cancelled) return;
-        setLiveEvents(rows);
+        setLiveEvents(eventRows);
+        setLiveCoupons(couponRows);
+        setEventNotice("");
       } catch (error) {
+        if (cancelled) return;
         console.error("Failed to load live events.", error);
         setEventNotice("이벤트 목록을 불러오지 못했습니다.");
       }
@@ -46,16 +47,65 @@ export default function EventsPage() {
     };
   }, []);
 
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadMyCoupons() {
+      if (!isLoggedIn) {
+        setMyCouponNames([]);
+        return;
+      }
+
+      try {
+        const rows = await fetchMyCoupons();
+        if (cancelled) return;
+        setMyCouponNames(rows.map((item) => item.couponName ?? item.name).filter(Boolean));
+      } catch (error) {
+        if (cancelled) return;
+        console.error("Failed to load my coupon snapshot.", error);
+      }
+    }
+
+    loadMyCoupons();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isLoggedIn]);
+
   const openEvent = (eventId) => {
     const nextParams = new URLSearchParams(searchParams);
     nextParams.set("event", eventId);
     setSearchParams(nextParams);
+    setActionNotice("");
   };
 
   const closeEvent = () => {
     const nextParams = new URLSearchParams(searchParams);
     nextParams.delete("event");
     setSearchParams(nextParams);
+    setActionNotice("");
+  };
+
+  const handleCouponClaim = async () => {
+    if (!selectedEvent || selectedEvent.entityType !== "COUPON") return;
+    if (!isLoggedIn) {
+      navigate("/login");
+      return;
+    }
+
+    try {
+      setClaimingCouponId(selectedEvent.id);
+      setActionNotice("");
+      await claimMyCoupon(selectedEvent);
+      const rows = await fetchMyCoupons();
+      setMyCouponNames(rows.map((item) => item.couponName ?? item.name).filter(Boolean));
+      setActionNotice("쿠폰을 쿠폰함에 담았습니다.");
+    } catch (error) {
+      setActionNotice(toUserFacingErrorMessage(error, "쿠폰을 받지 못했습니다."));
+    } finally {
+      setClaimingCouponId(null);
+    }
   };
 
   if (selectedEvent) {
@@ -79,7 +129,7 @@ export default function EventsPage() {
               <div className="events-detail-divider" />
               <small>{selectedEvent.detailCopy}</small>
               <Link className="events-detail-inline-link" to={selectedEvent.href ?? "/lodgings?theme=deal"}>
-                {selectedEvent.entityType === "COUPON" ? "혜택 적용 숙소 보기" : `${selectedEvent.targetLabel ?? "이벤트 대상"} 보기`}
+                {selectedEvent.entityType === "COUPON" ? "쿠폰 적용 숙소 보기" : `${selectedEvent.targetLabel ?? "이벤트 대상"} 보기`}
               </Link>
             </article>
 
@@ -89,19 +139,43 @@ export default function EventsPage() {
                 <strong>{selectedEvent.detailTitle}</strong>
                 <p>
                   {selectedEvent.entityType === "COUPON"
-                    ? "쿠폰형 프로모션은 혜택 대상 숙소와 쿠폰함 흐름으로 바로 이어집니다."
+                    ? "쿠폰형 프로모션은 먼저 쿠폰을 받고, 이후 쿠폰함과 적용 숙소로 이어집니다."
                     : "프로모션 카드를 누르면 바로 대상 숙소나 특가 리스트로 이어집니다."}
                 </p>
-                <Link
-                  className="events-detail-download-button is-link"
-                  to={selectedEvent.ctaHref ?? selectedEvent.href ?? "/lodgings?theme=deal"}
-                >
-                  {selectedEvent.ctaLabel ?? selectedEvent.action ?? "이벤트 대상 보기"}
-                </Link>
+                {selectedEvent.entityType === "COUPON" ? (
+                  hasClaimedSelectedCoupon ? (
+                    <Link className="events-detail-download-button is-link is-complete" to="/my/coupons">
+                      쿠폰함 보기
+                    </Link>
+                  ) : (
+                    <button
+                      type="button"
+                      className="events-detail-download-button"
+                      onClick={handleCouponClaim}
+                      disabled={claimingCouponId === selectedEvent.id}
+                    >
+                      {claimingCouponId === selectedEvent.id
+                        ? "쿠폰 받는 중"
+                        : isLoggedIn
+                          ? "쿠폰 받기"
+                          : "로그인 후 쿠폰 받기"}
+                    </button>
+                  )
+                ) : (
+                  <Link
+                    className="events-detail-download-button is-link"
+                    to={selectedEvent.ctaHref ?? selectedEvent.href ?? "/lodgings?theme=deal"}
+                  >
+                    {selectedEvent.ctaLabel ?? selectedEvent.action ?? "이벤트 대상 보기"}
+                  </Link>
+                )}
+                {actionNotice ? <div className="my-empty-inline">{actionNotice}</div> : null}
                 <div className="events-detail-side-note">
                   <span>
                     {selectedEvent.entityType === "COUPON"
-                      ? "로그인 후 쿠폰함과 특가 숙소 탐색으로 바로 이어집니다."
+                      ? hasClaimedSelectedCoupon
+                        ? "이미 받은 쿠폰입니다. 쿠폰함에서 바로 확인할 수 있습니다."
+                        : "쿠폰을 받은 뒤 마이페이지 쿠폰함과 적용 숙소 리스트로 이어집니다."
                       : `${selectedEvent.targetLabel ?? "대상 리스트"}로 바로 이동해 예약 탐색으로 이어집니다.`}
                   </span>
                 </div>
@@ -112,7 +186,7 @@ export default function EventsPage() {
                 <strong>{selectedEvent.entityType === "COUPON" ? "쿠폰함 / 적용 숙소" : `${selectedEvent.targetLabel ?? "특가 숙소"} 보기`}</strong>
                 <p>
                   {selectedEvent.entityType === "COUPON"
-                    ? "쿠폰 프로모션은 쿠폰함과 적용 대상 숙소 리스트를 바로 확인할 수 있게 연결합니다."
+                    ? "쿠폰 프로모션은 발급 후 쿠폰함에서 보유 상태를 확인하고 적용 숙소로 이어집니다."
                     : "프로모션 확인 후 실제 반영 상태는 선택한 지역/테마 리스트에서 이어서 봅니다."}
                 </p>
                 <Link className="coupon-action-button" to={selectedEvent.href ?? "/lodgings?theme=deal"}>
