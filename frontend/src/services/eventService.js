@@ -1,4 +1,4 @@
-import { quickThemes } from "../data/homeData";
+import { eventBanners, quickThemes } from "../data/homeData";
 import { get, getApiBaseUrl } from "../lib/appClient";
 
 const EVENT_PROMO_ACCENTS = ["sunset", "peach", "mint", "dusk"];
@@ -8,6 +8,7 @@ const EVENT_FALLBACK_IMAGES = [
   "https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?auto=format&fit=crop&w=1400&q=80",
   "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&w=1400&q=80",
 ];
+const COUPON_FALLBACK_IMAGES = eventBanners.map((item) => item.image).filter(Boolean);
 const EVENT_TARGET_PREFIX = "[[target:";
 const DEFAULT_EVENT_TARGET = "theme=deal";
 const eventTargetLabelByQuery = new Map([
@@ -54,6 +55,60 @@ function getEventTargetLabel(targetValue) {
   return eventTargetLabelByQuery.get(targetValue?.trim() || DEFAULT_EVENT_TARGET) ?? "이벤트 대상 숙소";
 }
 
+function resolveCouponTargetValue(couponName = "") {
+  if (couponName.includes("제주")) return "region=제주";
+  if (couponName.includes("부산")) return "region=부산";
+  if (couponName.includes("서울")) return "region=서울";
+  if (couponName.includes("오션")) return "theme=ocean";
+  if (couponName.includes("독채")) return "theme=private";
+  return DEFAULT_EVENT_TARGET;
+}
+
+function resolveCouponTargetLabel(couponName = "") {
+  return getEventTargetLabel(resolveCouponTargetValue(couponName));
+}
+
+function formatCouponDiscountLabel(discountType, discountValue) {
+  return discountType === "PERCENT"
+    ? `${Number(discountValue ?? 0)}% 할인`
+    : `${Number(discountValue ?? 0).toLocaleString()}원 할인`;
+}
+
+function mapCouponDto(dto, index = 0) {
+  const targetValue = resolveCouponTargetValue(dto.couponName ?? "");
+  const targetLabel = resolveCouponTargetLabel(dto.couponName ?? "");
+  const discountLabel = formatCouponDiscountLabel(dto.discountType, dto.discountValue);
+  const couponName = String(dto.couponName ?? "").trim();
+  const couponTitle = couponName || `${discountLabel} 쿠폰`;
+  const couponSubtitle = `${discountLabel} · ${targetLabel}`;
+
+  return {
+    id: `coupon-${dto.couponNo}`,
+    entityType: "COUPON",
+    couponNo: dto.couponNo,
+    couponName: dto.couponName,
+    title: couponTitle,
+    subtitle: couponSubtitle,
+    action: "쿠폰 받기",
+    heroTitle: couponTitle,
+    heroSubtitle: couponSubtitle,
+    heroEyebrow: "Discount Coupon",
+    heroMeta: formatEventPeriod(dto.startDate, dto.endDate),
+    detailTitle: couponTitle,
+    detailCopy: "쿠폰을 받으면 마이페이지 쿠폰함에 바로 추가됩니다.",
+    href: buildEventHref(targetValue),
+    targetLabel,
+    targetValue,
+    ctaLabel: "쿠폰 받기",
+    status: dto.status,
+    discountType: dto.discountType,
+    discountValue: dto.discountValue,
+    accent: EVENT_PROMO_ACCENTS[index % EVENT_PROMO_ACCENTS.length],
+    imageUrl: COUPON_FALLBACK_IMAGES[index % COUPON_FALLBACK_IMAGES.length] || EVENT_FALLBACK_IMAGES[index % EVENT_FALLBACK_IMAGES.length],
+    periodLabel: formatEventPeriod(dto.startDate, dto.endDate),
+  };
+}
+
 function mapEventDto(dto, index = 0) {
   const { content, targetValue } = parseEventContent(dto.content);
   const href = buildEventHref(targetValue);
@@ -90,4 +145,11 @@ export async function fetchLiveEvents() {
   return (response.dtoList ?? [])
     .filter((dto) => dto.status === "ONGOING")
     .map((dto, index) => mapEventDto(dto, index));
+}
+
+export async function fetchLiveCoupons() {
+  const response = await get("/api/coupon/list");
+  return (response ?? [])
+    .filter((dto) => dto.status === "ACTIVE")
+    .map((dto, index) => mapCouponDto(dto, index));
 }
